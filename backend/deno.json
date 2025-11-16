@@ -1,0 +1,21 @@
+{
+    "tasks": {
+      "start": "deno run --allow-net --allow-read --allow-env --allow-run --allow-scripts server.js",
+      "dev": "deno run --allow-net --allow-read --allow-env --allow-run --allow-scripts --watch server.js"
+    },
+    "imports": {
+      "express": "npm:express@^4.18.2",
+      "cors": "npm:cors@^2.8.5",
+      "mysql2": "npm:mysql2@^3.15.3",
+      "mysql2/promise": "npm:mysql2@^3.15.3/promise",
+      "bcryptjs": "npm:bcryptjs@^2.4.3",
+      "jsonwebtoken": "npm:jsonwebtoken@^9.0.2"
+    },
+    "nodeModulesDir": "auto",
+    "compilerOptions": {
+      "lib": ["deno.window", "deno.unstable"],
+      "strict": true
+    }
+  }
+  
+  
