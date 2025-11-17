@@ -4,8 +4,8 @@ import { useAuthStore } from '@/stores/auth';
 
 import LoginView from '../views/LoginView.vue';
 import DashboardView from '../views/DashboardView.vue';
-//import GoalTrackerView from '../views/GoalTracker.vue'; 
-//import TransactionFormView from '../views/TransactionForm.vue';
+import GoalTrackerView from '../views/GoalTracker.vue'; 
+import TransactionFormView from '../views/TransactionForm.vue';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
