@@ -1,20 +1,14 @@
-import express from 'npm:express@^4.18.2';
-import cors from 'npm:cors@^2.8.5';
+import { Application, Router } from 'https://deno.land/x/oak@v16.0.0/mod.ts';
 import { join, dirname } from 'https://deno.land/std@0.224.0/path/mod.ts';
 import { load } from 'https://deno.land/std@0.224.0/dotenv/mod.ts';
 
-
 try {
-
     const env = await load();
     
-
     for (const [key, value] of Object.entries(env)) {
         const trimmedKey = key.trim();
         const trimmedValue = typeof value === 'string' ? value.trim() : value;
 
-        // Wichtig: Werte aus .env NUR setzen, wenn noch keine Variable existiert.
-        // So überschreibt .env NICHT die Werte, die z.B. von Docker Compose kommen.
         if (trimmedValue && !Deno.env.get(trimmedKey)) {
             Deno.env.set(trimmedKey, trimmedValue);
         }
@@ -37,26 +31,23 @@ try {
     }
 }
 
-
 const dbHost = Deno.env.get('DB_HOST');
 const dbUser = Deno.env.get('DB_USER');
 const dbDatabase = Deno.env.get('DB_DATABASE');
 const dbPassword = Deno.env.get('DB_PASSWORD');
 
-console.log('🔍 Umgebungsvariablen nach .env Laden:');
-console.log('  PORT:', Deno.env.get('PORT') || 'NICHT GESETZT (Standard: 8080)');
-console.log('  DB_HOST:', dbHost || 'NICHT GESETZT');
+console.log('Umgebungsvariablen:');
+console.log('  PORT:', Deno.env.get('PORT') || '8080');
+console.log('  DB_HOST:', dbHost || 'localhost');
 console.log('  DB_USER:', dbUser || 'NICHT GESETZT');
 console.log('  DB_DATABASE:', dbDatabase || 'NICHT GESETZT');
 console.log('  DB_PASSWORD:', dbPassword ? 'GESETZT' : 'NICHT GESETZT');
 
-
 if (!dbUser || !dbPassword || !dbDatabase) {
     console.error('FEHLER: Datenbank-Umgebungsvariablen nicht vollständig gesetzt!');
-    console.error('   Bitte prüfe die .env Datei im backend/ Ordner.');
+    console.error('Bitte prüfe die .env Datei im backend/ Ordner.');
     Deno.exit(1);
 }
-
 
 const dbModule = await import('./src/config/db.js');
 const authRoutesModule = await import('./src/routes/auth.js');
@@ -66,58 +57,121 @@ const db = dbModule.default;
 const authRoutes = authRoutesModule.default;
 const transactionRoutes = transactionRoutesModule.default;
 
-const app = express();
+const app = new Application();
+const PORT = parseInt(Deno.env.get('PORT') || '8080');
 
+app.use(async (ctx, next) => {
+    const origin = ctx.request.headers.get('origin');
+    const allowedOrigins = [
+        'http://localhost:5173',
+        'http://localhost:5174',
+        Deno.env.get('FRONTEND_URL')
+    ].filter(Boolean);
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+        ctx.response.headers.set('Access-Control-Allow-Origin', origin || '*');
+        ctx.response.headers.set('Access-Control-Allow-Credentials', 'true');
+        ctx.response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+        ctx.response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    }
+    
+    if (ctx.request.method === 'OPTIONS') {
+        ctx.response.status = 204;
+        return;
+    }
+    
+    await next();
+});
 
-const PORT = Deno.env.get('PORT') || '8080';
-
-
-const corsOptions = {
-    origin: function (origin, callback) {
-        const allowedOrigins = [
-            'http://localhost:5173',
-            'http://localhost:5174',
-            Deno.env.get('FRONTEND_URL')
-        ].filter(Boolean);
-        
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
+app.use(async (ctx, next) => {
+    ctx.state.body = {};
+    if (ctx.request.hasBody) {
+        try {
+            const bodyReader = ctx.request.body;
+            const bodyType = await bodyReader.type();
+            if (bodyType === 'json') {
+                ctx.state.body = await bodyReader.json();
+            } else {
+                ctx.state.body = await bodyReader.text();
+            }
+        } catch (error) {
+            console.error('Body Parser Fehler:', error.message);
+            ctx.state.body = {};
         }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-};
+    }
+    await next();
+});
 
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(async (ctx, next) => {
+    try {
+        await next();
+    } catch (err) {
+        console.error('Unbehandelter Fehler:', err);
+        ctx.response.status = err.status || 500;
+        ctx.response.body = { message: err.message || 'Interner Serverfehler' };
+    }
+});
 
-
-app.use('/api/auth', authRoutes);
-app.use('/api/transactions', transactionRoutes);
-
+app.use(authRoutes.routes());
+app.use(authRoutes.allowedMethods());
+app.use(transactionRoutes.routes());
+app.use(transactionRoutes.allowedMethods());
 
 const currentFile = new URL(import.meta.url).pathname;
 const __dirname = dirname(currentFile);
 const staticFilesPath = join(__dirname, 'public');
 
-app.use(express.static(staticFilesPath));
-
-
-app.get(/.*/, (req, res) => {
-    if (req.url.startsWith('/api')) {
-        return res.status(404).send({ message: 'API Endpoint not found' });
+app.use(async (ctx, next) => {
+    const path = ctx.request.url.pathname;
+    
+    if (path.startsWith('/api')) {
+        if (!ctx.response.status || ctx.response.status === 404) {
+            ctx.response.status = 404;
+            ctx.response.body = { message: 'API Endpoint not found' };
+        }
+        return;
     }
-    res.sendFile(join(staticFilesPath, 'index.html'));
+ 
+    try {
+        const filePath = join(staticFilesPath, path === '/' ? 'index.html' : path);
+        const fileInfo = await Deno.stat(filePath);
+
+        if (fileInfo.isFile) {
+            ctx.response.body = await Deno.readFile(filePath);
+            const ext = path.split('.').pop() || '';
+            const contentTypeMap = {
+                'html': 'text/html',
+                'js': 'application/javascript',
+                'css': 'text/css',
+                'json': 'application/json',
+                'png': 'image/png',
+                'jpg': 'image/jpeg',
+                'svg': 'image/svg+xml'
+            };
+            ctx.response.headers.set('Content-Type', contentTypeMap[ext] || 'text/plain');
+            return;
+        }
+    } catch (error) {
+        // Datei nicht gefunden
+    }
+
+    try {
+        const indexPath = join(staticFilesPath, 'index.html');
+        ctx.response.body = await Deno.readFile(indexPath);
+        ctx.response.headers.set('Content-Type', 'text/html');
+    } catch (error) {
+        ctx.response.status = 404;
+        ctx.response.body = { message: 'Not found' };
+    }
 });
 
-
-app.listen(parseInt(PORT), () => {
-    console.log(`Sparo Backend hört auf http://localhost:${PORT}`);
-    console.log(`Frontend wird von: ${staticFilesPath} gehostet.`);
-});
+console.log(`Sparo Backend hört auf http://localhost:${PORT}`);
+console.log(`Frontend wird von: ${staticFilesPath} gehostet.`);
+console.log(`Starte Server auf Port ${PORT}...`);
+try {
+    await app.listen({ port: PORT, hostname: '0.0.0.0' });
+    console.log(`Server läuft auf http://0.0.0.0:${PORT}`);
+} catch (error) {
+    console.error('FEHLER beim Starten des Servers:', error);
+    Deno.exit(1);
+}

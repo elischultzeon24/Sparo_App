@@ -93,11 +93,9 @@ const createGoal = async () => {
             end_date: goalForm.value.end_date
         });
 
-        // Weiterleitung zum erstellten Ziel
         if (response.data.goalId) {
             router.push(`/goals/${response.data.goalId}`);
         } else {
-            // Fallback: Lade alle Ziele neu
             await fetchGoals();
         }
     } catch (error) {

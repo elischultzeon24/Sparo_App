@@ -1,13 +1,15 @@
-# version: '3.8'   # kann weg, ist obsolet
-
 services:
 
-  budget-buddy-app:
-    build: .
+  # Backend-Service (Deno + Oak)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sparo-backend
     ports:
-      - "3000:3000"            # Host 3000 -> Container 3000
+      - "3000:3000"
     environment:
-      PORT: 3000               # Sag deiner App explizit, worauf sie hören soll
+      PORT: 3000
       DB_HOST: budget-db
       DB_PORT: 3306
       DB_DATABASE: budget_tracker_db
@@ -18,7 +20,7 @@ services:
     depends_on:
       budget-db:
         condition: service_healthy
-    restart: on-failure
+    restart: unless-stopped
 
   budget-db:
     image: mysql:8.0

@@ -1,0 +1,51 @@
+# Docker Compose für Entwicklung mit Hot Reload
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sparo-backend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: budget-db
+      DB_PORT: 3306
+      DB_DATABASE: budget_tracker_db
+      DB_USER: sparo_user
+      DB_PASSWORD: app_password123
+      FRONTEND_URL: http://localhost:5173
+      JWT_SECRET: your_super_secret_jwt_key_that_is_very_long_and_random_12345
+    depends_on:
+      budget-db:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      # Mount für Hot Reload in Entwicklung
+      - ./backend:/app/backend
+    command: ["deno", "task", "dev"]
+
+  budget-db:
+    image: mysql:8.0
+    container_name: sparo-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_super_password
+      MYSQL_DATABASE: budget_tracker_db
+      MYSQL_USER: sparo_user
+      MYSQL_PASSWORD: app_password123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/1_init.sql:ro
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot_super_password"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  mysql_data:
+

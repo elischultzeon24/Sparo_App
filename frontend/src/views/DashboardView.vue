@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-//import CategoryChart from './CategoryChart.vue';
+import CategoryChart from './CategoryChart.vue';
 
 
 const authStore = useAuthStore();
@@ -28,6 +28,13 @@ const fetchSummary = async () => {
     isLoading.value = true;
     errorMessage.value = '';
     
+    // Sicherstellen, dass der Token gesetzt ist
+    if (!authStore.token) {
+        errorMessage.value = 'Bitte melde dich an, um die Übersicht zu sehen.';
+        isLoading.value = false;
+        router.push('/login');
+        return;
+    }
    
     const today = new Date();
     const month = today.getMonth() + 1; 
@@ -38,7 +45,10 @@ const fetchSummary = async () => {
 
     try {
         const response = await axios.get(apiUrl, {
-            params: { month, year }
+            params: { month, year },
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`
+            }
         });
         
 

@@ -19,18 +19,15 @@ const submitTransaction = async () => {
     statusType.value = '';
 
     const apiUrl = `http://localhost:3000/api/transactions/${transaction.value.type.toLowerCase()}`;
-    
-    // Token wird automatisch von axios.defaults.headers gesetzt
 
     try {
         const payload = { ...transaction.value };
-        delete payload.type; // Typ wird über die URL im Backend gesetzt
+        delete payload.type;
 
         const response = await axios.post(apiUrl, payload);
         
         statusMessage.value = response.data.message;
         statusType.value = 'success';
-        // Formular zurücksetzen
         transaction.value.amount = null;
         transaction.value.category = '';
 

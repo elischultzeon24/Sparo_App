@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '@/stores/auth'; 
-
+import { useAuthStore } from '@/stores/auth';
 
 import LoginView from '../views/LoginView.vue';
 import DashboardView from '../views/DashboardView.vue';
@@ -13,51 +12,45 @@ const router = createRouter({
         {
             path: '/',
             name: 'home',
-            redirect: '/dashboard' 
+            redirect: '/dashboard'
         },
         {
             path: '/login',
             name: 'login',
-            component: LoginView 
+            component: LoginView
         },
         {
             path: '/register',
             name: 'register',
-            component: LoginView 
+            component: LoginView
         },
         {
             path: '/dashboard',
             name: 'dashboard',
             component: DashboardView,
-            meta: { requiresAuth: true } 
-        },
-
-
-
-        {
-            path: '/goals/:id?',
-            name: 'goal-tracker',
-            component: GoalTrackerView, 
             meta: { requiresAuth: true }
         },
         {
-       
+            path: '/goals/:id?',
+            name: 'goal-tracker',
+            component: GoalTrackerView,
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/add',
             name: 'add-transaction',
-            component: TransactionFormView, 
+            component: TransactionFormView,
             meta: { requiresAuth: true }
         },
         {
             path: '/edit/:id',
             name: 'edit-transaction',
-            component: TransactionFormView, 
+            component: TransactionFormView,
             meta: { requiresAuth: true }
         },
-        
-       
         {
             path: '/:catchAll(.*)',
-            redirect: '/dashboard' 
+            redirect: '/dashboard'
         }
     ]
 });
@@ -65,19 +58,14 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
-    
 
     if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-        next('/login'); 
-    } 
- 
-    else if (authStore.isLoggedIn && (to.name === 'login' || to.name === 'register')) {
-        next('/dashboard'); 
-    } 
-    else {
-        next(); 
+        next('/login');
+    } else if (authStore.isLoggedIn && (to.name === 'login' || to.name === 'register')) {
+        next('/dashboard');
+    } else {
+        next();
     }
 });
-
 
 export default router;

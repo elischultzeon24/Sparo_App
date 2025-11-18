@@ -1,18 +1,20 @@
-import express from 'npm:express@^4.18.2';
+import { Router } from 'https://deno.land/x/oak@v16.0.0/mod.ts';
 import authenticateUser from '../../middleware/authenticate.js';
 import db from '../config/db.js';
 
-const router = express.Router();
+const router = new Router();
 
-
-router.get('/summary', authenticateUser, async (req, res) => {
-    const userId = req.user.id;
-    let { month, year } = req.query;
+// GET /api/transactions/summary
+router.get('/api/transactions/summary', authenticateUser, async (ctx) => {
+    const userId = ctx.state.user.id;
+    const urlParams = ctx.request.url.searchParams;
+    let month = urlParams.get('month');
+    let year = urlParams.get('year');
 
     if (!month || !year) {
         const today = new Date();
-        month = today.getMonth() + 1;
-        year = today.getFullYear();
+        month = String(today.getMonth() + 1);
+        year = String(today.getFullYear());
     }
     
     try {
@@ -22,7 +24,7 @@ router.get('/summary', authenticateUser, async (req, res) => {
                 SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) AS total_expense
             FROM transactions
             WHERE user_id = ? AND MONTH(date) = ? AND YEAR(date) = ?;`,
-            [userId, month, year]
+            [userId, parseInt(month), parseInt(year)]
         );
 
         const [categoryBreakdown] = await db.execute(
@@ -32,7 +34,7 @@ router.get('/summary', authenticateUser, async (req, res) => {
             FROM transactions
             WHERE user_id = ? AND type = 'Expense' AND MONTH(date) = ? AND YEAR(date) = ?
             GROUP BY category;`,
-            [userId, month, year]
+            [userId, parseInt(month), parseInt(year)]
         );
 
         const totalIncome = parseFloat(saldoResult[0].total_income) || 0;
@@ -45,25 +47,32 @@ router.get('/summary', authenticateUser, async (req, res) => {
             categoryBreakdown: categoryBreakdown
         };
 
-        return res.status(200).json(summary);
+        ctx.response.status = 200;
+        ctx.response.body = summary;
         
     } catch (error) {
         console.error("Fehler beim Abrufen der Zusammenfassung:", error);
-        return res.status(500).json({ message: "Interner Serverfehler beim Saldo." });
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Saldo." };
     }
 });
 
-
-router.post('/income', authenticateUser, async (req, res) => {
-    const { amount, category, date, description } = req.body;
-    const userId = req.user.id;
+// POST /api/transactions/income
+router.post('/api/transactions/income', authenticateUser, async (ctx) => {
+    const body = ctx.state.body || {};
+    const { amount, category, date, description } = body;
+    const userId = ctx.state.user.id;
 
     const parsedAmount = parseFloat(amount);
     if (!amount || !category || !date || isNaN(new Date(date).getTime())) {
-        return res.status(400).json({ message: "Fehlende oder ungültige Daten (Betrag, Kategorie, Datum)." });
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Fehlende oder ungültige Daten (Betrag, Kategorie, Datum)." };
+        return;
     }
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.status(400).json({ message: "Der Betrag muss eine positive Zahl sein." });
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Der Betrag muss eine positive Zahl sein." };
+        return;
     }
 
     try {
@@ -74,25 +83,32 @@ router.post('/income', authenticateUser, async (req, res) => {
             [userId, parsedAmount, category, date, description || null]
         );
         
-        return res.status(201).json({ message: "Einnahme erfolgreich gespeichert." });
+        ctx.response.status = 201;
+        ctx.response.body = { message: "Einnahme erfolgreich gespeichert." };
         
     } catch (error) {
         console.error("Datenbankfehler:", error);
-        return res.status(500).json({ message: "Interner Serverfehler beim Speichern." });
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Speichern." };
     }
 });
 
-
-router.post('/expense', authenticateUser, async (req, res) => {
-    const { amount, category, date, description } = req.body;
-    const userId = req.user.id;
+// POST /api/transactions/expense
+router.post('/api/transactions/expense', authenticateUser, async (ctx) => {
+    const body = ctx.state.body || {};
+    const { amount, category, date, description } = body;
+    const userId = ctx.state.user.id;
 
     const parsedAmount = parseFloat(amount);
     if (!amount || !category || !date || isNaN(new Date(date).getTime())) {
-        return res.status(400).json({ message: "Fehlende oder ungültige Daten (Betrag, Kategorie, Datum)." });
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Fehlende oder ungültige Daten (Betrag, Kategorie, Datum)." };
+        return;
     }
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.status(400).json({ message: "Der Betrag muss eine positive Zahl sein." });
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Der Betrag muss eine positive Zahl sein." };
+        return;
     }
 
     try {
@@ -103,23 +119,28 @@ router.post('/expense', authenticateUser, async (req, res) => {
             [userId, parsedAmount, category, date, description || null]
         );
         
-        return res.status(201).json({ message: "Ausgabe erfolgreich gespeichert." });
+        ctx.response.status = 201;
+        ctx.response.body = { message: "Ausgabe erfolgreich gespeichert." };
         
     } catch (error) {
         console.error("Datenbankfehler:", error);
-        return res.status(500).json({ message: "Interner Serverfehler beim Speichern." });
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Speichern." };
     }
 });
 
-
-router.put('/transaction/:id', authenticateUser, async (req, res) => {
-    const { id } = req.params;
-    const userId = req.user.id;
-    const { amount, category, date, description } = req.body;
+// PUT /api/transactions/transaction/:id
+router.put('/api/transactions/transaction/:id', authenticateUser, async (ctx) => {
+    const id = ctx.params.id;
+    const userId = ctx.state.user.id;
+    const body = ctx.state.body || {};
+    const { amount, category, date, description } = body;
 
     const parsedAmount = parseFloat(amount);
     if (!amount || !category || !date || isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.status(400).json({ message: "Ungültige oder fehlende Daten für das Update." });
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Ungültige oder fehlende Daten für das Update." };
+        return;
     }
 
     try {
@@ -131,21 +152,25 @@ router.put('/transaction/:id', authenticateUser, async (req, res) => {
         );
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Transaktion nicht gefunden oder Zugriff verweigert." });
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Transaktion nicht gefunden oder Zugriff verweigert." };
+            return;
         }
 
-        return res.status(200).json({ message: "Transaktion erfolgreich aktualisiert." });
+        ctx.response.status = 200;
+        ctx.response.body = { message: "Transaktion erfolgreich aktualisiert." };
 
     } catch (error) {
         console.error("Datenbankfehler beim Update:", error);
-        return res.status(500).json({ message: "Interner Serverfehler beim Aktualisieren." });
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Aktualisieren." };
     }
 });
 
-
-router.delete('/transaction/:id', authenticateUser, async (req, res) => {
-    const { id } = req.params;
-    const userId = req.user.id;
+// DELETE /api/transactions/transaction/:id
+router.delete('/api/transactions/transaction/:id', authenticateUser, async (ctx) => {
+    const id = ctx.params.id;
+    const userId = ctx.state.user.id;
 
     try {
         const [result] = await db.execute(
@@ -155,21 +180,25 @@ router.delete('/transaction/:id', authenticateUser, async (req, res) => {
         );
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Transaktion nicht gefunden oder Zugriff verweigert." });
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Transaktion nicht gefunden oder Zugriff verweigert." };
+            return;
         }
 
-        return res.status(200).json({ message: "Transaktion erfolgreich gelöscht." });
+        ctx.response.status = 200;
+        ctx.response.body = { message: "Transaktion erfolgreich gelöscht." };
 
     } catch (error) {
         console.error("Datenbankfehler beim Löschen:", error);
-        return res.status(500).json({ message: "Interner Serverfehler beim Löschen." });
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Löschen." };
     }
 });
 
-
-router.get('/goals', authenticateUser, async (req, res) => {
+// GET /api/transactions/goals
+router.get('/api/transactions/goals', authenticateUser, async (ctx) => {
     console.log('GET /goals Route aufgerufen');
-    const userId = req.user.id;
+    const userId = ctx.state.user.id;
 
     try {
         const [goals] = await db.execute(
@@ -178,22 +207,27 @@ router.get('/goals', authenticateUser, async (req, res) => {
         );
 
         console.log(`${goals.length} Ziele gefunden für User ${userId}`);
-        return res.status(200).json({ goals: goals });
+        ctx.response.status = 200;
+        ctx.response.body = { goals: goals };
 
     } catch (error) {
         console.error("Datenbankfehler beim Abrufen der Ziele:", error);
-        return res.status(500).json({ message: "Interner Serverfehler." });
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler." };
     }
 });
 
-
-router.post('/goal', authenticateUser, async (req, res) => {
-    const userId = req.user.id;
-    const { name, target_amount, start_date, end_date } = req.body;
+// POST /api/transactions/goal
+router.post('/api/transactions/goal', authenticateUser, async (ctx) => {
+    const userId = ctx.state.user.id;
+    const body = ctx.state.body || {};
+    const { name, target_amount, start_date, end_date } = body;
     
     const target = parseFloat(target_amount);
     if (!name || !target || target <= 0 || isNaN(new Date(end_date).getTime())) {
-        return res.status(400).json({ message: "Ungültige oder fehlende Zieldaten." });
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Ungültige oder fehlende Zieldaten." };
+        return;
     }
 
     try {
@@ -215,25 +249,27 @@ router.post('/goal', authenticateUser, async (req, res) => {
 
         const amountToSavePerMonth = (target - 0) / monthsRemaining;
         
-        return res.status(201).json({ 
+        ctx.response.status = 201;
+        ctx.response.body = { 
             message: "Sparziel erfolgreich angelegt.",
             goalId: goalId,
             reminder: {
                 amount: amountToSavePerMonth.toFixed(2),
                 months: monthsRemaining
             }
-        });
+        };
 
     } catch (error) {
         console.error("Datenbankfehler beim Ziel anlegen:", error);
-        return res.status(500).json({ message: "Interner Serverfehler." });
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler." };
     }
 });
 
-
-router.get('/goal/:id', authenticateUser, async (req, res) => {
-    const { id } = req.params;
-    const userId = req.user.id;
+// GET /api/transactions/goal/:id
+router.get('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
+    const id = ctx.params.id;
+    const userId = ctx.state.user.id;
 
     try {
         const [goalResult] = await db.execute(
@@ -242,7 +278,9 @@ router.get('/goal/:id', authenticateUser, async (req, res) => {
         );
 
         if (goalResult.length === 0) {
-            return res.status(404).json({ message: "Sparziel nicht gefunden oder Zugriff verweigert." });
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Sparziel nicht gefunden oder Zugriff verweigert." };
+            return;
         }
 
         const goal = goalResult[0];
@@ -262,13 +300,14 @@ router.get('/goal/:id', authenticateUser, async (req, res) => {
         const amountToSavePerMonth = neededToSave / monthsRemaining;
 
         let badge = null;
-        if (progressPercent >= 50 && progressPercent < 100) {
+        if (parseFloat(progressPercent) >= 50 && parseFloat(progressPercent) < 100) {
             badge = "50%-Meilenstein erreicht!";
-        } else if (progressPercent >= 100) {
+        } else if (parseFloat(progressPercent) >= 100) {
             badge = "Ziel erreicht!";
         }
 
-        return res.status(200).json({
+        ctx.response.status = 200;
+        ctx.response.body = {
             goal: goal,
             progress: {
                 percent: progressPercent,
@@ -278,28 +317,34 @@ router.get('/goal/:id', authenticateUser, async (req, res) => {
                 amount: amountToSavePerMonth.toFixed(2),
                 months: monthsRemaining
             }
-        });
+        };
 
     } catch (error) {
         console.error("Datenbankfehler beim Abrufen des Ziels:", error);
-        return res.status(500).json({ message: "Interner Serverfehler." });
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler." };
     }
 });
 
-
-router.put('/goal/:id', authenticateUser, async (req, res) => {
-    const { id } = req.params;
-    const userId = req.user.id;
-    const { name, current_savings, target_amount } = req.body;
+// PUT /api/transactions/goal/:id
+router.put('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
+    const id = ctx.params.id;
+    const userId = ctx.state.user.id;
+    const body = ctx.state.body || {};
+    const { name, current_savings, target_amount } = body;
 
     const parsedSavings = parseFloat(current_savings);
     const parsedTarget = parseFloat(target_amount);
     
     if (!name && isNaN(parsedSavings) && isNaN(parsedTarget)) {
-        return res.status(400).json({ message: "Keine gültigen Felder für das Update bereitgestellt." });
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Keine gültigen Felder für das Update bereitgestellt." };
+        return;
     }
     if ((!isNaN(parsedSavings) && parsedSavings < 0) || (!isNaN(parsedTarget) && parsedTarget <= 0)) {
-        return res.status(400).json({ message: "Sparbeträge und Zielbeträge müssen positiv sein." });
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Sparbeträge und Zielbeträge müssen positiv sein." };
+        return;
     }
 
     let updateFields = [];
@@ -319,7 +364,9 @@ router.put('/goal/:id', authenticateUser, async (req, res) => {
     }
 
     if (updateFields.length === 0) {
-        return res.status(400).json({ message: "Keine Felder zum Aktualisieren gefunden." });
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Keine Felder zum Aktualisieren gefunden." };
+        return;
     }
 
     try {
@@ -329,14 +376,46 @@ router.put('/goal/:id', authenticateUser, async (req, res) => {
         const [result] = await db.execute(updateQuery, queryParams);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Sparziel nicht gefunden oder Zugriff verweigert." });
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Sparziel nicht gefunden oder Zugriff verweigert." };
+            return;
         }
 
-        return res.status(200).json({ message: "Sparziel erfolgreich aktualisiert." });
+        ctx.response.status = 200;
+        ctx.response.body = { message: "Sparziel erfolgreich aktualisiert." };
 
     } catch (error) {
         console.error("Datenbankfehler beim Aktualisieren des Ziels:", error);
-        return res.status(500).json({ message: "Interner Serverfehler beim Aktualisieren." });
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Aktualisieren." };
+    }
+});
+
+// DELETE /api/transactions/goal/:id
+router.delete('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
+    const id = ctx.params.id;
+    const userId = ctx.state.user.id;
+
+    try {
+        const [result] = await db.execute(
+            `DELETE FROM goals 
+             WHERE goal_id = ? AND user_id = ?`,
+            [id, userId]
+        );
+
+        if (result.affectedRows === 0) {
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Sparziel nicht gefunden oder Zugriff verweigert." };
+            return;
+        }
+
+        ctx.response.status = 200;
+        ctx.response.body = { message: "Sparziel erfolgreich gelöscht." };
+
+    } catch (error) {
+        console.error("Datenbankfehler beim Löschen des Ziels:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Löschen." };
     }
 });
 
