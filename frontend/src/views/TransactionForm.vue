@@ -3,10 +3,10 @@ import { ref } from 'vue';
 import axios from 'axios';
 
 const transaction = ref({
-    type: 'Expense', // Standard: Ausgabe
+    type: 'Expense',
     amount: null,
     category: '',
-    date: new Date().toISOString().substring(0, 10), // Heutiges Datum
+    date: new Date().toISOString().substring(0, 10),
     description: ''
 });
 const statusMessage = ref('');
@@ -43,18 +43,18 @@ const submitTransaction = async () => {
 <template>
     <div class="transaction-form card">
         <div class="form-header">
-            <h2>💸 Transaktion hinzufügen</h2>
+            <h2>Transaktion hinzufügen</h2>
             <router-link to="/dashboard" class="back-link">← Zurück zum Dashboard</router-link>
         </div>
         
         <form @submit.prevent="submitTransaction" class="transaction-form-content">
             <div class="form-group">
                 <label>
-                    <span class="label-icon">📊</span> Typ:
+                    <span class="label-icon">Typ:</span>
                 </label>
                 <select v-model="transaction.type" class="form-input">
-                    <option value="Expense">💸 Ausgabe</option>
-                    <option value="Income">💰 Einnahme</option>
+                    <option value="Expense">Ausgabe</option>
+                    <option value="Income">Einnahme</option>
                 </select>
             </div>
 
@@ -74,7 +74,7 @@ const submitTransaction = async () => {
 
             <div class="form-group">
                 <label>
-                    <span class="label-icon">🏷️</span> Kategorie:
+                    <span class="label-icon">Kategorie:</span>
                 </label>
                 <select v-model="transaction.category" required class="form-input">
                     <option value="">Bitte wählen...</option>
@@ -84,7 +84,7 @@ const submitTransaction = async () => {
 
             <div class="form-group">
                 <label>
-                    <span class="label-icon">📅</span> Datum:
+                    <span class="label-icon">Datum:</span>
                 </label>
                 <input 
                     type="date" 
@@ -96,7 +96,7 @@ const submitTransaction = async () => {
             
             <div class="form-group">
                 <label>
-                    <span class="label-icon">📝</span> Beschreibung (optional):
+                    <span class="label-icon">Beschreibung (optional):</span>
                 </label>
                 <input 
                     type="text" 
@@ -107,7 +107,7 @@ const submitTransaction = async () => {
             </div>
 
             <button type="submit" class="submit-btn">
-                ✅ Speichern
+                Speichern
             </button>
         </form>
 

@@ -11,13 +11,6 @@ const dbConfig = {
     namedPlaceholders: false
 };
 
-console.log('Datenbankkonfiguration:');
-console.log('  Host:', dbConfig.host);
-console.log('  User:', dbConfig.user || 'NICHT GESETZT');
-console.log('  Database:', dbConfig.database || 'NICHT GESETZT');
-console.log('  Port:', dbConfig.port);
-console.log('  Password:', dbConfig.password ? 'GESETZT' : 'NICHT GESETZT');
-
 if (!dbConfig.user || !dbConfig.password || !dbConfig.database) {
     console.error('FEHLER: Datenbankkonfiguration unvollständig!');
     Deno.exit(1);
@@ -28,7 +21,6 @@ const pool = mysql.createPool(dbConfig);
 (async () => {
     try {
         const connection = await pool.getConnection();
-        console.log("Datenbankverbindung erfolgreich hergestellt!");
         connection.release();
     } catch (err) {
         console.error("FEHLER BEI DER DATENBANKVERBINDUNG:", err.message);

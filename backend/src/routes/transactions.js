@@ -197,7 +197,6 @@ router.delete('/api/transactions/transaction/:id', authenticateUser, async (ctx)
 
 // GET /api/transactions/goals
 router.get('/api/transactions/goals', authenticateUser, async (ctx) => {
-    console.log('GET /goals Route aufgerufen');
     const userId = ctx.state.user.id;
 
     try {
@@ -206,7 +205,6 @@ router.get('/api/transactions/goals', authenticateUser, async (ctx) => {
             [userId]
         );
 
-        console.log(`${goals.length} Ziele gefunden für User ${userId}`);
         ctx.response.status = 200;
         ctx.response.body = { goals: goals };
 
@@ -406,7 +404,6 @@ router.put('/api/transactions/goal/:id/add', authenticateUser, async (ctx) => {
     }
 
     try {
-        // Prüfe, ob das Sparziel existiert und dem Benutzer gehört
         const [goalCheck] = await db.execute(
             `SELECT current_savings, target_amount FROM goals WHERE goal_id = ? AND user_id = ?`,
             [id, userId]
@@ -422,7 +419,6 @@ router.put('/api/transactions/goal/:id/add', authenticateUser, async (ctx) => {
         const targetAmount = parseFloat(goalCheck[0].target_amount);
         const newSavings = currentSavings + parsedAmount;
 
-        // Aktualisiere den Sparbetrag
         const [result] = await db.execute(
             `UPDATE goals SET current_savings = ? WHERE goal_id = ? AND user_id = ?`,
             [newSavings, id, userId]
@@ -434,7 +430,6 @@ router.put('/api/transactions/goal/:id/add', authenticateUser, async (ctx) => {
             return;
         }
 
-        // Berechne neuen Fortschritt
         const newProgress = ((newSavings / targetAmount) * 100).toFixed(2);
         let badge = null;
         if (parseFloat(newProgress) >= 50 && parseFloat(newProgress) < 100) {
@@ -473,7 +468,6 @@ router.put('/api/transactions/goal/:id/remove', authenticateUser, async (ctx) =>
     }
 
     try {
-        // Prüfe, ob das Sparziel existiert und dem Benutzer gehört
         const [goalCheck] = await db.execute(
             `SELECT current_savings, target_amount FROM goals WHERE goal_id = ? AND user_id = ?`,
             [id, userId]
@@ -488,7 +482,6 @@ router.put('/api/transactions/goal/:id/remove', authenticateUser, async (ctx) =>
         const currentSavings = parseFloat(goalCheck[0].current_savings);
         const targetAmount = parseFloat(goalCheck[0].target_amount);
         
-        // Prüfe, ob genug gespart wurde
         if (currentSavings < parsedAmount) {
             ctx.response.status = 400;
             ctx.response.body = { 
@@ -499,7 +492,6 @@ router.put('/api/transactions/goal/:id/remove', authenticateUser, async (ctx) =>
 
         const newSavings = Math.max(0, currentSavings - parsedAmount);
 
-        // Aktualisiere den Sparbetrag
         const [result] = await db.execute(
             `UPDATE goals SET current_savings = ? WHERE goal_id = ? AND user_id = ?`,
             [newSavings, id, userId]
@@ -511,7 +503,6 @@ router.put('/api/transactions/goal/:id/remove', authenticateUser, async (ctx) =>
             return;
         }
 
-        // Berechne neuen Fortschritt
         const newProgress = ((newSavings / targetAmount) * 100).toFixed(2);
         let badge = null;
         if (parseFloat(newProgress) >= 50 && parseFloat(newProgress) < 100) {

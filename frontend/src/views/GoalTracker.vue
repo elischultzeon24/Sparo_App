@@ -12,7 +12,6 @@ const errorMessage = ref('');
 const goalsList = ref([]);
 const successMessage = ref('');
 
-// Formular-Daten
 const goalForm = ref({
     name: '',
     target_amount: '',
@@ -20,42 +19,33 @@ const goalForm = ref({
     end_date: ''
 });
 
-// Betrag hinzufügen/entfernen
 const amountToAdd = ref('');
 const amountToRemove = ref('');
 const isUpdating = ref(false);
 
-// Prüfe, ob eine ID in der Route ist
 const goalId = computed(() => route.params.id);
 
-// Lade alle Ziele
 const fetchGoals = async () => {
     try {
         const response = await axios.get('http://localhost:3000/api/transactions/goals');
         goalsList.value = response.data.goals || [];
         
-        // Wenn eine ID vorhanden ist, lade das spezifische Ziel
         if (goalId.value) {
             await fetchGoal(goalId.value);
         } else if (goalsList.value.length > 0) {
-            // Wenn keine ID aber Ziele existieren, lade das erste Ziel
             await fetchGoal(goalsList.value[0].goal_id);
-            // Aktualisiere die URL ohne Navigation (replace statt push)
             router.replace(`/goals/${goalsList.value[0].goal_id}`);
         } else {
-            // Keine Ziele vorhanden, zeige Formular
             showCreateForm.value = true;
             isLoading.value = false;
         }
     } catch (error) {
         console.error("Fehler beim Laden der Ziele:", error);
-        // Bei Fehler zeige Formular
         showCreateForm.value = true;
         isLoading.value = false;
     }
 };
 
-// Lade ein spezifisches Ziel
 const fetchGoal = async (id) => {
     isLoading.value = true;
     showCreateForm.value = false;
@@ -69,7 +59,6 @@ const fetchGoal = async (id) => {
     } catch (error) {
         console.error("Fehler beim Laden des Ziels:", error);
         if (error.response?.status === 404) {
-            // Ziel nicht gefunden, zeige Formular
             errorMessage.value = 'Sparziel nicht gefunden. Erstelle ein neues Ziel.';
             showCreateForm.value = true;
         } else {
@@ -81,7 +70,6 @@ const fetchGoal = async (id) => {
     }
 };
 
-// Betrag zum Sparziel hinzufügen
 const addAmount = async () => {
     if (!goalId.value) return;
     
@@ -104,7 +92,6 @@ const addAmount = async () => {
         successMessage.value = response.data.message;
         amountToAdd.value = '';
         
-        // Aktualisiere die Anzeige
         await fetchGoal(goalId.value);
     } catch (error) {
         console.error("Fehler beim Hinzufügen des Betrags:", error);
@@ -114,7 +101,6 @@ const addAmount = async () => {
     }
 };
 
-// Betrag vom Sparziel entfernen
 const removeAmount = async () => {
     if (!goalId.value) return;
     
@@ -137,7 +123,6 @@ const removeAmount = async () => {
         successMessage.value = response.data.message;
         amountToRemove.value = '';
         
-        // Aktualisiere die Anzeige
         await fetchGoal(goalId.value);
     } catch (error) {
         console.error("Fehler beim Entfernen des Betrags:", error);
@@ -147,7 +132,6 @@ const removeAmount = async () => {
     }
 };
 
-// Erstelle ein neues Ziel
 const createGoal = async () => {
     errorMessage.value = '';
     
@@ -179,7 +163,6 @@ const createGoal = async () => {
     }
 };
 
-// Funktion für Gamification-Badge
 const getBadgeClass = (badgeName) => {
     if (badgeName) return 'badge-achieved';
     return '';
@@ -201,7 +184,6 @@ onMounted(() => {
             <p>Sparziel wird geladen...</p>
         </div>
         
-        <!-- Formular zum Erstellen eines neuen Ziels -->
         <div v-else-if="showCreateForm" class="goal-content">
             <div class="create-goal-card card">
                 <h2 class="goal-name">Neues Sparziel erstellen</h2>
@@ -264,10 +246,9 @@ onMounted(() => {
             </div>
         </div>
         
-        <!-- Anzeige eines vorhandenen Ziels -->
         <div v-else-if="goalDetails" class="goal-content">
             <div class="goal-card card">
-                <h2 class="goal-name">🎯 {{ goalDetails.goal.name }}</h2>
+                <h2 class="goal-name">{{ goalDetails.goal.name }}</h2>
                 
                 <div class="progress-section">
                     <div class="progress-info">
@@ -309,7 +290,6 @@ onMounted(() => {
                 </div>
             </div>
 
-            <!-- Betrag hinzufügen/entfernen -->
             <div class="amount-controls card">
                 <h3>Betrag verwalten</h3>
                 
@@ -322,7 +302,7 @@ onMounted(() => {
 
                 <div class="amount-control-group">
                     <div class="amount-input-group">
-                        <label for="add-amount">💰 Betrag hinzufügen (€)</label>
+                        <label for="add-amount">Betrag hinzufügen (€)</label>
                         <div class="input-with-button">
                             <input 
                                 type="number" 
@@ -345,7 +325,7 @@ onMounted(() => {
                     </div>
 
                     <div class="amount-input-group">
-                        <label for="remove-amount">💸 Betrag entfernen (€)</label>
+                        <label for="remove-amount">Betrag entfernen (€)</label>
                         <div class="input-with-button">
                             <input 
                                 type="number" 
@@ -374,7 +354,6 @@ onMounted(() => {
             </button>
         </div>
         
-        <!-- Fehleranzeige -->
         <div v-else class="error-card card">
             <p>Sparziel konnte nicht geladen werden.</p>
             <button @click="showCreateForm = true" class="create-new-button">

@@ -3,18 +3,15 @@ import { computed,ref } from 'vue';
 import { PieChart } from 'vue-chart-3';
 import { Chart, registerables } from 'chart.js';
 
-Chart.register(...registerables); // Chart.js Komponenten registrieren
+Chart.register(...registerables);
 
-// Definiere die Props, die die Dashboard-Daten enthalten
 const props = defineProps({
-    // chartData erwartet ein Objekt mit Labels und Daten-Arrays (siehe Dashboard.vue)
     chartData: {
         type: Object,
         required: true
     }
 });
 
-// Konfiguriere die Daten für Chart.js
 const chartOptions = computed(() => ({
     labels: props.chartData.labels,
     datasets: [
@@ -25,7 +22,6 @@ const chartOptions = computed(() => ({
     ]
 }));
 
-// Optionen für das Diagramm (z.B. Responsivität)
 const options = ref({
     responsive: true,
     plugins: {

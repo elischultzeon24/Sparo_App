@@ -28,7 +28,6 @@ const fetchSummary = async () => {
     isLoading.value = true;
     errorMessage.value = '';
     
-    // Sicherstellen, dass der Token gesetzt ist
     if (!authStore.token) {
         errorMessage.value = 'Bitte melde dich an, um die Übersicht zu sehen.';
         isLoading.value = false;

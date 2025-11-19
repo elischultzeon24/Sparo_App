@@ -13,10 +13,7 @@ try {
             Deno.env.set(trimmedKey, trimmedValue);
         }
     }
-    console.log('.env Datei geladen');
 } catch (err) {
-    console.log('Fehler beim Laden der .env Datei:', err.message);
-
     try {
         const envPath = join(Deno.cwd(), '.env');
         const env = await load({ envPath });
@@ -25,9 +22,7 @@ try {
                 Deno.env.set(key.trim(), value.trim());
             }
         }
-        console.log('.env Datei aus alternativem Pfad geladen');
     } catch (err2) {
-        console.log('Keine .env Datei gefunden. Stelle sicher, dass .env im backend/ Ordner existiert.');
     }
 }
 
@@ -36,12 +31,6 @@ const dbUser = Deno.env.get('DB_USER');
 const dbDatabase = Deno.env.get('DB_DATABASE');
 const dbPassword = Deno.env.get('DB_PASSWORD');
 
-console.log('Umgebungsvariablen:');
-console.log('  PORT:', Deno.env.get('PORT') || '8080');
-console.log('  DB_HOST:', dbHost || 'localhost');
-console.log('  DB_USER:', dbUser || 'NICHT GESETZT');
-console.log('  DB_DATABASE:', dbDatabase || 'NICHT GESETZT');
-console.log('  DB_PASSWORD:', dbPassword ? 'GESETZT' : 'NICHT GESETZT');
 
 if (!dbUser || !dbPassword || !dbDatabase) {
     console.error('FEHLER: Datenbank-Umgebungsvariablen nicht vollständig gesetzt!');
@@ -165,12 +154,8 @@ app.use(async (ctx, next) => {
     }
 });
 
-console.log(`Sparo Backend hört auf http://localhost:${PORT}`);
-console.log(`Frontend wird von: ${staticFilesPath} gehostet.`);
-console.log(`Starte Server auf Port ${PORT}...`);
 try {
     await app.listen({ port: PORT, hostname: '0.0.0.0' });
-    console.log(`Server läuft auf http://0.0.0.0:${PORT}`);
 } catch (error) {
     console.error('FEHLER beim Starten des Servers:', error);
     Deno.exit(1);
