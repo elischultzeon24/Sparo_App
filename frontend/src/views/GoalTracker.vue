@@ -96,7 +96,7 @@ const addAmount = async () => {
     successMessage.value = '';
 
     try {
-        const response = await axios.patch(
+        const response = await axios.put(
             `http://localhost:3000/api/transactions/goal/${goalId.value}/add`,
             { amount: amount }
         );
@@ -129,7 +129,7 @@ const removeAmount = async () => {
     successMessage.value = '';
 
     try {
-        const response = await axios.patch(
+        const response = await axios.put(
             `http://localhost:3000/api/transactions/goal/${goalId.value}/remove`,
             { amount: amount }
         );

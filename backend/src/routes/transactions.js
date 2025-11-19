@@ -391,8 +391,8 @@ router.put('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
     }
 });
 
-// PATCH /api/transactions/goal/:id/add - Betrag zum Sparziel hinzufügen
-router.patch('/api/transactions/goal/:id/add', authenticateUser, async (ctx) => {
+// PUT /api/transactions/goal/:id/add - Betrag zum Sparziel hinzufügen
+router.put('/api/transactions/goal/:id/add', authenticateUser, async (ctx) => {
     const id = ctx.params.id;
     const userId = ctx.state.user.id;
     const body = ctx.state.body || {};
@@ -458,8 +458,8 @@ router.patch('/api/transactions/goal/:id/add', authenticateUser, async (ctx) => 
     }
 });
 
-// PATCH /api/transactions/goal/:id/remove - Betrag vom Sparziel entfernen
-router.patch('/api/transactions/goal/:id/remove', authenticateUser, async (ctx) => {
+// PUT /api/transactions/goal/:id/remove - Betrag vom Sparziel entfernen
+router.put('/api/transactions/goal/:id/remove', authenticateUser, async (ctx) => {
     const id = ctx.params.id;
     const userId = ctx.state.user.id;
     const body = ctx.state.body || {};
