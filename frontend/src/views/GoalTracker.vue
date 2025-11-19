@@ -10,6 +10,7 @@ const isLoading = ref(true);
 const showCreateForm = ref(false);
 const errorMessage = ref('');
 const goalsList = ref([]);
+const successMessage = ref('');
 
 // Formular-Daten
 const goalForm = ref({
@@ -18,6 +19,11 @@ const goalForm = ref({
     start_date: new Date().toISOString().split('T')[0],
     end_date: ''
 });
+
+// Betrag hinzufügen/entfernen
+const amountToAdd = ref('');
+const amountToRemove = ref('');
+const isUpdating = ref(false);
 
 // Prüfe, ob eine ID in der Route ist
 const goalId = computed(() => route.params.id);
@@ -59,6 +65,7 @@ const fetchGoal = async (id) => {
         const response = await axios.get(apiUrl);
         goalDetails.value = response.data;
         errorMessage.value = '';
+        successMessage.value = '';
     } catch (error) {
         console.error("Fehler beim Laden des Ziels:", error);
         if (error.response?.status === 404) {
@@ -71,6 +78,72 @@ const fetchGoal = async (id) => {
         goalDetails.value = null;
     } finally {
         isLoading.value = false;
+    }
+};
+
+// Betrag zum Sparziel hinzufügen
+const addAmount = async () => {
+    if (!goalId.value) return;
+    
+    const amount = parseFloat(amountToAdd.value);
+    if (!amountToAdd.value || isNaN(amount) || amount <= 0) {
+        errorMessage.value = 'Bitte gib einen gültigen Betrag ein.';
+        return;
+    }
+
+    isUpdating.value = true;
+    errorMessage.value = '';
+    successMessage.value = '';
+
+    try {
+        const response = await axios.patch(
+            `http://localhost:3000/api/transactions/goal/${goalId.value}/add`,
+            { amount: amount }
+        );
+
+        successMessage.value = response.data.message;
+        amountToAdd.value = '';
+        
+        // Aktualisiere die Anzeige
+        await fetchGoal(goalId.value);
+    } catch (error) {
+        console.error("Fehler beim Hinzufügen des Betrags:", error);
+        errorMessage.value = error.response?.data?.message || 'Fehler beim Hinzufügen des Betrags.';
+    } finally {
+        isUpdating.value = false;
+    }
+};
+
+// Betrag vom Sparziel entfernen
+const removeAmount = async () => {
+    if (!goalId.value) return;
+    
+    const amount = parseFloat(amountToRemove.value);
+    if (!amountToRemove.value || isNaN(amount) || amount <= 0) {
+        errorMessage.value = 'Bitte gib einen gültigen Betrag ein.';
+        return;
+    }
+
+    isUpdating.value = true;
+    errorMessage.value = '';
+    successMessage.value = '';
+
+    try {
+        const response = await axios.patch(
+            `http://localhost:3000/api/transactions/goal/${goalId.value}/remove`,
+            { amount: amount }
+        );
+
+        successMessage.value = response.data.message;
+        amountToRemove.value = '';
+        
+        // Aktualisiere die Anzeige
+        await fetchGoal(goalId.value);
+    } catch (error) {
+        console.error("Fehler beim Entfernen des Betrags:", error);
+        errorMessage.value = error.response?.data?.message || 'Fehler beim Entfernen des Betrags.';
+    } finally {
+        isUpdating.value = false;
     }
 };
 
@@ -120,18 +193,18 @@ onMounted(() => {
 <template>
     <div class="goal-tracker">
         <div class="goal-header">
-            <h1>🎯 Sparziel-Fortschritt</h1>
+            <h1>Sparziel-Fortschritt</h1>
             <router-link to="/dashboard" class="back-link">← Zurück zum Dashboard</router-link>
         </div>
         
         <div v-if="isLoading" class="loading-card card">
-            <p>📊 Sparziel wird geladen...</p>
+            <p>Sparziel wird geladen...</p>
         </div>
         
         <!-- Formular zum Erstellen eines neuen Ziels -->
         <div v-else-if="showCreateForm" class="goal-content">
             <div class="create-goal-card card">
-                <h2 class="goal-name">🎯 Neues Sparziel erstellen</h2>
+                <h2 class="goal-name">Neues Sparziel erstellen</h2>
                 
                 <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
                 
@@ -219,14 +292,13 @@ onMounted(() => {
                 
                 <div v-if="goalDetails.progress.badge" class="badge-card card">
                     <div class="badge-content">
-                        <span class="badge-icon">🎉</span>
                         <span class="badge-text">{{ goalDetails.progress.badge }}</span>
                     </div>
                 </div>
             </div>
 
             <div class="reminder-card card">
-                <h3>📅 Monatlicher Spar-Reminder</h3>
+                <h3>Monatlicher Spar-Reminder</h3>
                 <div class="reminder-content">
                     <p class="reminder-amount">
                         Du musst noch <strong>{{ goalDetails.reminder.amount }} €</strong> pro Monat sparen
@@ -236,17 +308,77 @@ onMounted(() => {
                     </p>
                 </div>
             </div>
+
+            <!-- Betrag hinzufügen/entfernen -->
+            <div class="amount-controls card">
+                <h3>Betrag verwalten</h3>
+                
+                <div v-if="successMessage" class="success-message">
+                    {{ successMessage }}
+                </div>
+                <div v-if="errorMessage" class="error-message">
+                    {{ errorMessage }}
+                </div>
+
+                <div class="amount-control-group">
+                    <div class="amount-input-group">
+                        <label for="add-amount">💰 Betrag hinzufügen (€)</label>
+                        <div class="input-with-button">
+                            <input 
+                                type="number" 
+                                id="add-amount" 
+                                v-model.number="amountToAdd" 
+                                placeholder="0.00"
+                                min="0"
+                                step="0.01"
+                                :disabled="isUpdating"
+                                class="amount-input"
+                            />
+                            <button 
+                                @click="addAmount" 
+                                :disabled="isUpdating || !amountToAdd || parseFloat(amountToAdd) <= 0"
+                                class="amount-button add-button"
+                            >
+                                Hinzufügen
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="amount-input-group">
+                        <label for="remove-amount">💸 Betrag entfernen (€)</label>
+                        <div class="input-with-button">
+                            <input 
+                                type="number" 
+                                id="remove-amount" 
+                                v-model.number="amountToRemove" 
+                                placeholder="0.00"
+                                min="0"
+                                step="0.01"
+                                :disabled="isUpdating"
+                                class="amount-input"
+                            />
+                            <button 
+                                @click="removeAmount" 
+                                :disabled="isUpdating || !amountToRemove || parseFloat(amountToRemove) <= 0"
+                                class="amount-button remove-button"
+                            >
+                                Entfernen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <button @click="showCreateForm = true" class="create-new-button">
-                ➕ Neues Sparziel erstellen
+                Neues Sparziel erstellen
             </button>
         </div>
         
         <!-- Fehleranzeige -->
         <div v-else class="error-card card">
-            <p>❌ Sparziel konnte nicht geladen werden.</p>
+            <p>Sparziel konnte nicht geladen werden.</p>
             <button @click="showCreateForm = true" class="create-new-button">
-                ➕ Neues Sparziel erstellen
+                Neues Sparziel erstellen
             </button>
         </div>
     </div>
@@ -274,24 +406,21 @@ onMounted(() => {
 }
 
 .goal-header h1 {
-    color: white;
-    font-size: 2.5em;
+    color: #1a1a1a;
+    font-size: 2em;
     margin-bottom: 15px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .back-link {
-    color: white;
+    color: #1a1a1a;
     text-decoration: none;
-    font-weight: 600;
-    opacity: 0.9;
-    transition: opacity 0.2s;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
+    transition: color 0.2s;
 }
 
 .back-link:hover {
-    opacity: 1;
+    color: #333333;
     text-decoration: underline;
 }
 
@@ -311,12 +440,9 @@ onMounted(() => {
 }
 
 .goal-name {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 1.8em;
-    font-weight: 700;
+    color: #1a1a1a;
+    font-size: 1.75em;
+    font-weight: 600;
     margin-bottom: 30px;
     text-align: center;
 }
@@ -336,65 +462,53 @@ onMounted(() => {
 }
 
 .saved-amount {
-    color: #48bb78;
+    color: #1a1a1a;
     font-size: 1.5em;
 }
 
 .separator {
-    color: #718096;
+    color: #666666;
     font-weight: 400;
 }
 
 .target-amount {
-    color: #2d3748;
+    color: #1a1a1a;
     font-size: 1.5em;
 }
 
 .progress-bar-container {
     width: 100%;
-    height: 40px;
-    background: #e2e8f0;
-    border-radius: 20px;
+    height: 32px;
+    background: #e5e5e5;
+    border-radius: 6px;
     overflow: hidden;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     position: relative;
 }
 
 .progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #48bb78 0%, #38a169 100%);
-    border-radius: 20px;
+    background: #1a1a1a;
+    border-radius: 6px;
     transition: width 0.5s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
 }
 
 .progress-text {
     color: white;
-    font-weight: 700;
-    font-size: 1em;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-weight: 600;
+    font-size: 0.9em;
     z-index: 1;
 }
 
 .badge-card {
     margin-top: 24px;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    color: white;
+    background: #fafafa;
+    color: #1a1a1a;
     text-align: center;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.02);
-    }
+    border: 1px solid #e5e5e5;
 }
 
 .badge-content {
@@ -411,15 +525,16 @@ onMounted(() => {
 }
 
 .reminder-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #fafafa;
+    color: #1a1a1a;
+    border: 1px solid #e5e5e5;
 }
 
 .reminder-card h3 {
-    color: white;
+    color: #1a1a1a;
     margin-bottom: 20px;
-    font-size: 1.5em;
-    font-weight: 700;
+    font-size: 1.3em;
+    font-weight: 600;
 }
 
 .reminder-content {
@@ -459,58 +574,54 @@ onMounted(() => {
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    font-weight: 600;
-    color: #2d3748;
-    font-size: 0.95em;
+    font-weight: 500;
+    color: #4a4a4a;
+    font-size: 0.9em;
 }
 
 .form-group input {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border: 1px solid #d1d1d1;
+    border-radius: 6px;
     font-size: 16px;
-    transition: all 0.3s ease;
-    background: #f7fafc;
+    transition: border-color 0.2s ease;
+    background: white;
     box-sizing: border-box;
+    color: #1a1a1a;
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #1a1a1a;
 }
 
 .form-group input:disabled {
-    background: #e2e8f0;
+    background: #f5f5f5;
     cursor: not-allowed;
 }
 
 .submit-button {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1a1a1a;
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
     margin-top: 10px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+    transition: background 0.2s ease;
 }
 
 .submit-button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    background: #333333;
 }
 
 .submit-button:disabled {
-    background: #cbd5e0;
+    background: #d1d1d1;
     cursor: not-allowed;
-    box-shadow: none;
 }
 
 .create-new-button {
@@ -518,38 +629,149 @@ onMounted(() => {
     max-width: 600px;
     margin: 30px auto 0;
     padding: 14px;
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    background: #1a1a1a;
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(72, 187, 120, 0.3);
+    font-weight: 500;
+    transition: background 0.2s ease;
     display: block;
 }
 
 .create-new-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(72, 187, 120, 0.4);
+    background: #333333;
 }
 
 .error-message {
-    color: #e53e3e;
+    color: #d32f2f;
     margin-bottom: 20px;
-    font-weight: 600;
+    font-weight: 500;
     padding: 12px;
-    background: #fed7d7;
-    border-radius: 8px;
-    border-left: 4px solid #e53e3e;
+    background: #ffebee;
+    border-radius: 6px;
+    border: 1px solid #ffcdd2;
+}
+
+.success-message {
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    font-weight: 500;
+    padding: 12px;
+    background: #f1f8f4;
+    border-radius: 6px;
+    border: 1px solid #d1d1d1;
+}
+
+.amount-controls {
+    margin-top: 24px;
+}
+
+.amount-controls h3 {
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.amount-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.amount-input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.amount-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a4a4a;
+    font-size: 0.9em;
+}
+
+.input-with-button {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.amount-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #d1d1d1;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.2s ease;
+    background: white;
+    color: #1a1a1a;
+}
+
+.amount-input:focus {
+    outline: none;
+    border-color: #1a1a1a;
+}
+
+.amount-input:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.amount-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.add-button {
+    background: #1a1a1a;
+    color: white;
+}
+
+.add-button:hover:not(:disabled) {
+    background: #333333;
+}
+
+.remove-button {
+    background: #d32f2f;
+    color: white;
+}
+
+.remove-button:hover:not(:disabled) {
+    background: #b71c1c;
+}
+
+.amount-button:disabled {
+    background: #d1d1d1;
+    color: #666666;
+    cursor: not-allowed;
 }
 
 .card {
     background: white;
-    border-radius: 20px;
+    border-radius: 8px;
     padding: 30px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     margin-bottom: 24px;
+    border: 1px solid #e5e5e5;
+}
+
+@media (max-width: 768px) {
+    .input-with-button {
+        flex-direction: column;
+    }
+    
+    .amount-button {
+        width: 100%;
+    }
 }
 </style>
