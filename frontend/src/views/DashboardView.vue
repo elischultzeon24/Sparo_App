@@ -100,35 +100,37 @@ onMounted(() => {
         </div>
         
         <div v-else>
-            <div class="saldo-box">
-                <h3>Aktueller Saldo (Monat)</h3>
-                <p :class="{'positive': summaryData.currentSaldo >= 0, 'negative': summaryData.currentSaldo < 0}" class="saldo-value">
-                    {{ summaryData.currentSaldo >= 0 ? '+' : '' }}{{ summaryData.currentSaldo.toFixed(2) }} €
-                </p>
-                <div class="income-expense-summary">
-                    <div class="summary-item income">
-                        <span class="summary-label">Einnahmen</span>
-                        <span class="summary-value">{{ summaryData.totalIncome.toFixed(2) }} €</span>
+            <div class="dashboard-grid">
+                <div class="saldo-box">
+                    <h3>Aktueller Saldo (Monat)</h3>
+                    <p :class="{'positive': summaryData.currentSaldo >= 0, 'negative': summaryData.currentSaldo < 0}" class="saldo-value">
+                        {{ summaryData.currentSaldo >= 0 ? '+' : '' }}{{ summaryData.currentSaldo.toFixed(2) }} €
+                    </p>
+                    <div class="income-expense-summary">
+                        <div class="summary-item income">
+                            <span class="summary-label">Einnahmen</span>
+                            <span class="summary-value">{{ summaryData.totalIncome.toFixed(2) }} €</span>
+                        </div>
+                        <div class="summary-item expense">
+                            <span class="summary-label">Ausgaben</span>
+                            <span class="summary-value">{{ summaryData.totalExpense.toFixed(2) }} €</span>
+                        </div>
                     </div>
-                    <div class="summary-item expense">
-                        <span class="summary-label">Ausgaben</span>
-                        <span class="summary-value">{{ summaryData.totalExpense.toFixed(2) }} €</span>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Ausgaben nach Kategorie</h3>
+                    <div v-if="summaryData.categoryBreakdown.length > 0">
+                        <CategoryChart :chartData="chartData" />
                     </div>
+                    <p v-else class="no-data-message">Noch keine Ausgaben erfasst, um Diagramme zu erstellen.</p>
                 </div>
             </div>
 
-               <router-link to="/add" class="add-transaction-button">
-            Einnahme / Ausgabe hinzufügen
-        </router-link>
-            <hr>
-
-
-            <div class="chart-section">
-                <h3>Ausgaben nach Kategorie</h3>
-                <div v-if="summaryData.categoryBreakdown.length > 0">
-                    <CategoryChart :chartData="chartData" />
-                </div>
-                <p v-else>Noch keine Ausgaben erfasst, um Diagramme zu erstellen.</p>
+            <div class="action-section">
+                <router-link to="/add" class="add-transaction-button">
+                    Einnahme / Ausgabe hinzufügen
+                </router-link>
             </div>
 
         </div>
@@ -172,6 +174,11 @@ onMounted(() => {
     font-size: 1.2em;
 }
 
+.saldo-box h3 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
 .welcome-subtitle {
     color: #666666;
     font-size: 1em;
@@ -195,21 +202,30 @@ onMounted(() => {
     background: #333333;
 }
 
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 30px 0;
+}
+
 .saldo-box {
-    margin: 30px auto;
     padding: 40px;
     background: white;
     border-radius: 8px;
-    max-width: 500px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     border: 1px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .saldo-value {
-    font-size: 3em;
+    font-size: 2.5em;
     font-weight: 600;
     margin: 20px 0;
     letter-spacing: -1px;
+    text-align: center;
 }
 
 .positive {
@@ -293,26 +309,46 @@ onMounted(() => {
     background: white;
     border-radius: 8px;
     padding: 30px;
-    margin: 30px 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     border: 1px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
 }
 
 .chart-section h3 {
     margin-bottom: 25px;
     color: #1a1a1a;
+    font-size: 1.2em;
+    font-weight: 600;
 }
 
-hr {
-    border: none;
-    border-top: 1px solid #e5e5e5;
-    margin: 40px 0;
+.no-data-message {
+    text-align: center;
+    color: #666666;
+    padding: 20px;
+    font-style: italic;
+}
+
+.action-section {
+    margin-top: 30px;
+    text-align: center;
 }
 
 /* Responsive Design */
+@media (max-width: 968px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
 @media (max-width: 768px) {
     .dashboard-container h1 {
         font-size: 2em;
+    }
+    
+    .dashboard-grid {
+        margin: 20px 0;
     }
     
     .saldo-box {
@@ -330,6 +366,11 @@ hr {
     
     .chart-section {
         padding: 20px;
+    }
+    
+    .add-transaction-button {
+        width: 100%;
+        text-align: center;
     }
 }
 </style>
