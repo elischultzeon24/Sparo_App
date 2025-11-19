@@ -86,14 +86,14 @@ const handleSubmit = async () => {
 
 <style scoped>
 .auth-container {
-    max-width: 450px;
+    max-width: 400px;
     margin: 60px auto;
     padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     background: white;
     text-align: center;
-    animation: fadeIn 0.5s ease-in;
+    border: 1px solid #e5e5e5;
 }
 
 @keyframes fadeIn {
@@ -108,13 +108,10 @@ const handleSubmit = async () => {
 }
 
 h1 {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #1a1a1a;
     margin-bottom: 30px;
-    font-size: 2em;
-    font-weight: 700;
+    font-size: 1.75em;
+    font-weight: 600;
 }
 
 .form-group {
@@ -125,83 +122,75 @@ h1 {
 label {
     display: block;
     margin-bottom: 8px;
-    font-weight: 600;
-    color: #2d3748;
+    font-weight: 500;
+    color: #4a4a4a;
     font-size: 0.9em;
 }
 
 input {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border: 1px solid #d1d1d1;
+    border-radius: 6px;
     font-size: 16px;
-    transition: all 0.3s ease;
-    background: #f7fafc;
+    transition: border-color 0.2s ease;
+    background: white;
+    color: #1a1a1a;
 }
 
 input:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #1a1a1a;
 }
 
 button {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1a1a1a;
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
     margin-top: 10px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+    transition: background 0.2s ease;
 }
 
 button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
-}
-
-button:active:not(:disabled) {
-    transform: translateY(0);
+    background: #333333;
 }
 
 button:disabled {
-    background: #cbd5e0;
+    background: #d1d1d1;
     cursor: not-allowed;
-    box-shadow: none;
 }
 
 .error-message {
-    color: #e53e3e;
+    color: #d32f2f;
     margin-bottom: 20px;
-    font-weight: 600;
+    font-weight: 500;
     padding: 12px;
-    background: #fed7d7;
-    border-radius: 8px;
-    border-left: 4px solid #e53e3e;
+    background: #ffebee;
+    border-radius: 6px;
+    border: 1px solid #ffcdd2;
 }
 
 .switch-link {
     margin-top: 25px;
     font-size: 14px;
-    color: #4a5568;
+    color: #666666;
 }
 
 .switch-link a {
-    color: #667eea;
+    color: #1a1a1a;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 500;
     transition: color 0.2s;
 }
 
 .switch-link a:hover {
-    color: #764ba2;
+    color: #333333;
     text-decoration: underline;
 }
 

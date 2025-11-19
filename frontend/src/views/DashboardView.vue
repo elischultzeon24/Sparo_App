@@ -93,11 +93,9 @@ onMounted(() => {
         <h2>Monatliche Finanzübersicht</h2>
 
         <div v-if="isLoading" class="loading-state card">
-            <div class="loading-spinner">⏳</div>
             <p>Daten werden geladen...</p>
         </div>
         <div v-else-if="errorMessage" class="error-state card">
-            <div class="error-icon">❌</div>
             <p>{{ errorMessage }}</p>
         </div>
         
@@ -120,7 +118,7 @@ onMounted(() => {
             </div>
 
                <router-link to="/add" class="add-transaction-button">
-            ➕ Einnahme / Ausgabe hinzufügen
+            Einnahme / Ausgabe hinzufügen
         </router-link>
             <hr>
 
@@ -156,87 +154,78 @@ onMounted(() => {
 }
 
 .dashboard-container h1 {
-    color: white;
-    font-size: 2.5em;
-    margin-bottom: 30px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    font-weight: 800;
+    color: #1a1a1a;
+    font-size: 2em;
+    margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .dashboard-container h2 {
-    color: white;
+    color: #1a1a1a;
     margin: 40px 0 20px;
     font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    font-size: 1.5em;
 }
 
 .dashboard-container h3 {
-    color: #2d3748;
+    color: #1a1a1a;
     margin-bottom: 15px;
-    font-weight: 700;
+    font-weight: 600;
+    font-size: 1.2em;
 }
 
 .welcome-subtitle {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 1.2em;
+    color: #666666;
+    font-size: 1em;
     margin-bottom: 40px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .add-transaction-button {
     display: inline-block;
-    padding: 14px 28px;
+    padding: 12px 24px;
     margin: 20px 0;
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    background: #1a1a1a;
     color: white;
     text-decoration: none;
-    border-radius: 12px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(72, 187, 120, 0.3);
-    font-size: 1em;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+    font-size: 0.95em;
 }
 
 .add-transaction-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(72, 187, 120, 0.4);
+    background: #333333;
 }
 
 .saldo-box {
     margin: 30px auto;
     padding: 40px;
     background: white;
-    border-radius: 20px;
+    border-radius: 8px;
     max-width: 500px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e5e5;
 }
 
 .saldo-value {
-    font-size: 3.5em;
-    font-weight: 800;
+    font-size: 3em;
+    font-weight: 600;
     margin: 20px 0;
-    letter-spacing: -2px;
+    letter-spacing: -1px;
 }
 
 .positive {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #1a1a1a;
 }
 
 .negative {
-    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #d32f2f;
 }
 
 .income-expense-summary {
     margin-top: 30px;
     padding-top: 25px;
-    border-top: 2px solid #e2e8f0;
+    border-top: 1px solid #e5e5e5;
     display: flex;
     justify-content: space-around;
     gap: 20px;
@@ -246,43 +235,26 @@ onMounted(() => {
     flex: 1;
     text-align: center;
     padding: 15px;
-    border-radius: 12px;
-    background: #f7fafc;
-    transition: transform 0.2s;
-}
-
-.summary-item:hover {
-    transform: translateY(-2px);
-}
-
-.summary-item.income {
-    border: 2px solid #48bb78;
-}
-
-.summary-item.expense {
-    border: 2px solid #f56565;
+    border-radius: 6px;
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
 }
 
 .summary-label {
     display: block;
-    font-size: 0.9em;
-    color: #718096;
+    font-size: 0.85em;
+    color: #666666;
     margin-bottom: 8px;
-    font-weight: 600;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .summary-value {
     display: block;
-    font-size: 1.4em;
-    font-weight: 700;
-}
-
-.summary-item.income .summary-value {
-    color: #48bb78;
-}
-
-.summary-item.expense .summary-value {
-    color: #f56565;
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #1a1a1a;
 }
 
 .loading-state, .error-state {
@@ -308,50 +280,50 @@ onMounted(() => {
 }
 
 .error-state {
-    color: #e53e3e;
-    background: #fed7d7;
-    border-left: 4px solid #e53e3e;
+    color: #d32f2f;
+    background: #ffebee;
+    border: 1px solid #ffcdd2;
+    border-radius: 6px;
 }
 
 .error-icon {
-    font-size: 3em;
-    margin-bottom: 20px;
+    font-size: 2em;
+    margin-bottom: 15px;
 }
 
 .chart-section {
     background: white;
-    border-radius: 20px;
+    border-radius: 8px;
     padding: 30px;
     margin: 30px 0;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e5e5;
 }
 
 .chart-section h3 {
     margin-bottom: 25px;
-    color: #2d3748;
+    color: #1a1a1a;
 }
 
 .goal-link {
     display: inline-block;
     margin-top: 30px;
-    padding: 14px 28px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 12px 24px;
+    background: #1a1a1a;
     color: white;
     text-decoration: none;
-    border-radius: 12px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background 0.2s ease;
 }
 
 .goal-link:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    background: #333333;
 }
 
 hr {
     border: none;
-    border-top: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid #e5e5e5;
     margin: 40px 0;
 }
 

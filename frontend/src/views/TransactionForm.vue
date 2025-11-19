@@ -141,24 +141,21 @@ const submitTransaction = async () => {
 }
 
 .form-header h2 {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 2em;
-    font-weight: 700;
+    color: #1a1a1a;
+    font-size: 1.75em;
+    font-weight: 600;
     margin-bottom: 10px;
 }
 
 .back-link {
-    color: #667eea;
+    color: #1a1a1a;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 500;
     transition: color 0.2s;
 }
 
 .back-link:hover {
-    color: #764ba2;
+    color: #333333;
     text-decoration: underline;
 }
 
@@ -178,31 +175,30 @@ label {
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
-    font-weight: 600;
-    color: #2d3748;
-    font-size: 0.95em;
+    font-weight: 500;
+    color: #4a4a4a;
+    font-size: 0.9em;
 }
 
 .label-icon {
-    font-size: 1.2em;
+    font-size: 1.1em;
 }
 
 .form-input {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border: 1px solid #d1d1d1;
+    border-radius: 6px;
     font-size: 16px;
-    transition: all 0.3s ease;
-    background: #f7fafc;
+    transition: border-color 0.2s ease;
+    background: white;
     font-family: inherit;
+    color: #1a1a1a;
 }
 
 .form-input:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #1a1a1a;
 }
 
 select.form-input {
@@ -211,26 +207,20 @@ select.form-input {
 
 .submit-btn {
     width: 100%;
-    padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 14px;
+    background: #1a1a1a;
     color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 500;
     margin-top: 10px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+    transition: background 0.2s ease;
 }
 
 .submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
-}
-
-.submit-btn:active {
-    transform: translateY(0);
+    background: #333333;
 }
 
 .status-message {
@@ -254,15 +244,17 @@ select.form-input {
 }
 
 .status-message.success {
-    background: #c6f6d5;
-    color: #22543d;
-    border-left: 4px solid #48bb78;
+    background: #f1f8f4;
+    color: #1a1a1a;
+    border: 1px solid #d1d1d1;
+    border-left: 3px solid #1a1a1a;
 }
 
 .status-message.error {
-    background: #fed7d7;
-    color: #742a2a;
-    border-left: 4px solid #e53e3e;
+    background: #ffebee;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+    border-left: 3px solid #d32f2f;
 }
 
 /* Responsive Design */

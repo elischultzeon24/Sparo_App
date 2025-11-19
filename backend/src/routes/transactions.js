@@ -391,6 +391,150 @@ router.put('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
     }
 });
 
+// PATCH /api/transactions/goal/:id/add - Betrag zum Sparziel hinzufügen
+router.patch('/api/transactions/goal/:id/add', authenticateUser, async (ctx) => {
+    const id = ctx.params.id;
+    const userId = ctx.state.user.id;
+    const body = ctx.state.body || {};
+    const { amount } = body;
+
+    const parsedAmount = parseFloat(amount);
+    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Ungültiger Betrag. Der Betrag muss eine positive Zahl sein." };
+        return;
+    }
+
+    try {
+        // Prüfe, ob das Sparziel existiert und dem Benutzer gehört
+        const [goalCheck] = await db.execute(
+            `SELECT current_savings, target_amount FROM goals WHERE goal_id = ? AND user_id = ?`,
+            [id, userId]
+        );
+
+        if (goalCheck.length === 0) {
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Sparziel nicht gefunden oder Zugriff verweigert." };
+            return;
+        }
+
+        const currentSavings = parseFloat(goalCheck[0].current_savings);
+        const targetAmount = parseFloat(goalCheck[0].target_amount);
+        const newSavings = currentSavings + parsedAmount;
+
+        // Aktualisiere den Sparbetrag
+        const [result] = await db.execute(
+            `UPDATE goals SET current_savings = ? WHERE goal_id = ? AND user_id = ?`,
+            [newSavings, id, userId]
+        );
+
+        if (result.affectedRows === 0) {
+            ctx.response.status = 500;
+            ctx.response.body = { message: "Fehler beim Aktualisieren des Sparziels." };
+            return;
+        }
+
+        // Berechne neuen Fortschritt
+        const newProgress = ((newSavings / targetAmount) * 100).toFixed(2);
+        let badge = null;
+        if (parseFloat(newProgress) >= 50 && parseFloat(newProgress) < 100) {
+            badge = "50%-Meilenstein erreicht!";
+        } else if (parseFloat(newProgress) >= 100) {
+            badge = "Ziel erreicht!";
+        }
+
+        ctx.response.status = 200;
+        ctx.response.body = { 
+            message: `Betrag von ${parsedAmount.toFixed(2)} € erfolgreich hinzugefügt.`,
+            new_savings: newSavings,
+            progress_percent: newProgress,
+            badge: badge
+        };
+
+    } catch (error) {
+        console.error("Datenbankfehler beim Hinzufügen des Betrags:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Hinzufügen des Betrags." };
+    }
+});
+
+// PATCH /api/transactions/goal/:id/remove - Betrag vom Sparziel entfernen
+router.patch('/api/transactions/goal/:id/remove', authenticateUser, async (ctx) => {
+    const id = ctx.params.id;
+    const userId = ctx.state.user.id;
+    const body = ctx.state.body || {};
+    const { amount } = body;
+
+    const parsedAmount = parseFloat(amount);
+    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Ungültiger Betrag. Der Betrag muss eine positive Zahl sein." };
+        return;
+    }
+
+    try {
+        // Prüfe, ob das Sparziel existiert und dem Benutzer gehört
+        const [goalCheck] = await db.execute(
+            `SELECT current_savings, target_amount FROM goals WHERE goal_id = ? AND user_id = ?`,
+            [id, userId]
+        );
+
+        if (goalCheck.length === 0) {
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Sparziel nicht gefunden oder Zugriff verweigert." };
+            return;
+        }
+
+        const currentSavings = parseFloat(goalCheck[0].current_savings);
+        const targetAmount = parseFloat(goalCheck[0].target_amount);
+        
+        // Prüfe, ob genug gespart wurde
+        if (currentSavings < parsedAmount) {
+            ctx.response.status = 400;
+            ctx.response.body = { 
+                message: `Nicht genug gespart. Aktueller Stand: ${currentSavings.toFixed(2)} €. Du kannst maximal ${currentSavings.toFixed(2)} € entfernen.` 
+            };
+            return;
+        }
+
+        const newSavings = Math.max(0, currentSavings - parsedAmount);
+
+        // Aktualisiere den Sparbetrag
+        const [result] = await db.execute(
+            `UPDATE goals SET current_savings = ? WHERE goal_id = ? AND user_id = ?`,
+            [newSavings, id, userId]
+        );
+
+        if (result.affectedRows === 0) {
+            ctx.response.status = 500;
+            ctx.response.body = { message: "Fehler beim Aktualisieren des Sparziels." };
+            return;
+        }
+
+        // Berechne neuen Fortschritt
+        const newProgress = ((newSavings / targetAmount) * 100).toFixed(2);
+        let badge = null;
+        if (parseFloat(newProgress) >= 50 && parseFloat(newProgress) < 100) {
+            badge = "50%-Meilenstein erreicht!";
+        } else if (parseFloat(newProgress) >= 100) {
+            badge = "Ziel erreicht!";
+        }
+
+        ctx.response.status = 200;
+        ctx.response.body = { 
+            message: `Betrag von ${parsedAmount.toFixed(2)} € erfolgreich entfernt.`,
+            new_savings: newSavings,
+            progress_percent: newProgress,
+            badge: badge
+        };
+
+    } catch (error) {
+        console.error("Datenbankfehler beim Entfernen des Betrags:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Entfernen des Betrags." };
+    }
+});
+
 // DELETE /api/transactions/goal/:id
 router.delete('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
     const id = ctx.params.id;
