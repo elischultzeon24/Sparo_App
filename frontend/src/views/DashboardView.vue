@@ -130,8 +130,6 @@ onMounted(() => {
                 </div>
                 <p v-else>Noch keine Ausgaben erfasst, um Diagramme zu erstellen.</p>
             </div>
-            
-            <router-link to="/goals" class="goal-link">Zum Sparziel-Fortschritt wechseln &raquo;</router-link>
 
         </div>
     </div>
@@ -303,22 +301,6 @@ onMounted(() => {
 .chart-section h3 {
     margin-bottom: 25px;
     color: #1a1a1a;
-}
-
-.goal-link {
-    display: inline-block;
-    margin-top: 30px;
-    padding: 12px 24px;
-    background: #1a1a1a;
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 500;
-    transition: background 0.2s ease;
-}
-
-.goal-link:hover {
-    background: #333333;
 }
 
 hr {

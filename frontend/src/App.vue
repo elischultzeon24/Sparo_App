@@ -19,7 +19,14 @@ const handleLogout = () => {
         <div class="header-content">
             <RouterLink to="/dashboard" class="logo">Sparo</RouterLink>
             
-            <nav>
+            <nav class="header-nav">
+                <RouterLink 
+                    v-if="authStore.isLoggedIn" 
+                    to="/goals" 
+                    class="nav-link goals-link"
+                >
+                    Sparziele
+                </RouterLink>
                 <button v-if="authStore.isLoggedIn" @click="handleLogout" class="logout-btn">
                     Abmelden
                 </button>
@@ -77,6 +84,50 @@ const handleLogout = () => {
         letter-spacing: -0.5px;
     }
     
+    .header-nav {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .nav-link {
+        color: #1a1a1a;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9em;
+        padding: 10px 16px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .nav-link:hover {
+        background: #f5f5f5;
+        color: #1a1a1a;
+    }
+    
+    .goals-link {
+        border: 1px solid #e5e5e5;
+    }
+    
+    .goals-link:hover {
+        background: #fafafa;
+        border-color: #d1d1d1;
+    }
+    
+    .goals-link.router-link-active {
+        background: #1a1a1a;
+        color: white;
+        border-color: #1a1a1a;
+    }
+    
+    .goals-link.router-link-active:hover {
+        background: #333333;
+        border-color: #333333;
+    }
+    
     .logout-btn {
         background: #1a1a1a;
         color: white;
@@ -122,6 +173,15 @@ const handleLogout = () => {
         
         .app-main {
             padding: 20px 15px;
+        }
+        
+        .header-nav {
+            gap: 10px;
+        }
+        
+        .nav-link {
+            padding: 8px 12px;
+            font-size: 0.85em;
         }
         
         .logout-btn {
