@@ -278,18 +278,6 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div class="reminder-card card">
-                <h3>Monatlicher Spar-Reminder</h3>
-                <div class="reminder-content">
-                    <p class="reminder-amount">
-                        Du musst noch <strong>{{ goalDetails.reminder.amount }} €</strong> pro Monat sparen
-                    </p>
-                    <p class="reminder-time">
-                        um dein Ziel in <strong>{{ goalDetails.reminder.months }} Monaten</strong> zu erreichen
-                    </p>
-                </div>
-            </div>
-
             <div class="amount-controls card">
                 <h3>Betrag verwalten</h3>
                 
@@ -501,39 +489,6 @@ onMounted(() => {
 
 .badge-icon {
     font-size: 1.5em;
-}
-
-.reminder-card {
-    background: #fafafa;
-    color: #1a1a1a;
-    border: 1px solid #e5e5e5;
-}
-
-.reminder-card h3 {
-    color: #1a1a1a;
-    margin-bottom: 20px;
-    font-size: 1.3em;
-    font-weight: 600;
-}
-
-.reminder-content {
-    font-size: 1.1em;
-    line-height: 1.8;
-}
-
-.reminder-amount {
-    margin-bottom: 10px;
-    font-size: 1.2em;
-}
-
-.reminder-time {
-    font-size: 1em;
-    opacity: 0.95;
-}
-
-.reminder-content strong {
-    font-size: 1.2em;
-    font-weight: 800;
 }
 
 .create-goal-card {
