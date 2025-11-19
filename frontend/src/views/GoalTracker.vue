@@ -2,6 +2,9 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import { useAuthStore } from '@/stores/auth';
+
+const authStore = useAuthStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -86,7 +89,12 @@ const addAmount = async () => {
     try {
         const response = await axios.put(
             `http://localhost:3000/api/transactions/goal/${goalId.value}/add`,
-            { amount: amount }
+            { amount: amount },
+            {
+                headers: {
+                    'Authorization': `Bearer ${authStore.token}`
+                }
+            }
         );
 
         successMessage.value = response.data.message;
@@ -117,7 +125,12 @@ const removeAmount = async () => {
     try {
         const response = await axios.put(
             `http://localhost:3000/api/transactions/goal/${goalId.value}/remove`,
-            { amount: amount }
+            { amount: amount },
+            {
+                headers: {
+                    'Authorization': `Bearer ${authStore.token}`
+                }
+            }
         );
 
         successMessage.value = response.data.message;

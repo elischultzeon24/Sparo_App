@@ -264,131 +264,6 @@ router.post('/api/transactions/goal', authenticateUser, async (ctx) => {
     }
 });
 
-// GET /api/transactions/goal/:id
-router.get('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
-    const id = ctx.params.id;
-    const userId = ctx.state.user.id;
-
-    try {
-        const [goalResult] = await db.execute(
-            `SELECT * FROM goals WHERE goal_id = ? AND user_id = ?`,
-            [id, userId]
-        );
-
-        if (goalResult.length === 0) {
-            ctx.response.status = 404;
-            ctx.response.body = { message: "Sparziel nicht gefunden oder Zugriff verweigert." };
-            return;
-        }
-
-        const goal = goalResult[0];
-        const target = parseFloat(goal.target_amount);
-        const saved = parseFloat(goal.current_savings);
-        const endDate = new Date(goal.end_date);
-        const today = new Date();
-
-        const progressPercent = ((saved / target) * 100).toFixed(2);
-        
-        let monthsRemaining = (endDate.getFullYear() - today.getFullYear()) * 12;
-        monthsRemaining -= today.getMonth();
-        monthsRemaining += endDate.getMonth();
-        monthsRemaining = Math.max(1, monthsRemaining);
-
-        const neededToSave = Math.max(0, target - saved);
-        const amountToSavePerMonth = neededToSave / monthsRemaining;
-
-        let badge = null;
-        if (parseFloat(progressPercent) >= 50 && parseFloat(progressPercent) < 100) {
-            badge = "50%-Meilenstein erreicht!";
-        } else if (parseFloat(progressPercent) >= 100) {
-            badge = "Ziel erreicht!";
-        }
-
-        ctx.response.status = 200;
-        ctx.response.body = {
-            goal: goal,
-            progress: {
-                percent: progressPercent,
-                badge: badge
-            },
-            reminder: {
-                amount: amountToSavePerMonth.toFixed(2),
-                months: monthsRemaining
-            }
-        };
-
-    } catch (error) {
-        console.error("Datenbankfehler beim Abrufen des Ziels:", error);
-        ctx.response.status = 500;
-        ctx.response.body = { message: "Interner Serverfehler." };
-    }
-});
-
-// PUT /api/transactions/goal/:id
-router.put('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
-    const id = ctx.params.id;
-    const userId = ctx.state.user.id;
-    const body = ctx.state.body || {};
-    const { name, current_savings, target_amount } = body;
-
-    const parsedSavings = parseFloat(current_savings);
-    const parsedTarget = parseFloat(target_amount);
-    
-    if (!name && isNaN(parsedSavings) && isNaN(parsedTarget)) {
-        ctx.response.status = 400;
-        ctx.response.body = { message: "Keine gültigen Felder für das Update bereitgestellt." };
-        return;
-    }
-    if ((!isNaN(parsedSavings) && parsedSavings < 0) || (!isNaN(parsedTarget) && parsedTarget <= 0)) {
-        ctx.response.status = 400;
-        ctx.response.body = { message: "Sparbeträge und Zielbeträge müssen positiv sein." };
-        return;
-    }
-
-    let updateFields = [];
-    let queryParams = [];
-
-    if (name) {
-        updateFields.push('name = ?');
-        queryParams.push(name);
-    }
-    if (!isNaN(parsedSavings)) {
-        updateFields.push('current_savings = ?');
-        queryParams.push(parsedSavings);
-    }
-    if (!isNaN(parsedTarget)) {
-        updateFields.push('target_amount = ?');
-        queryParams.push(parsedTarget);
-    }
-
-    if (updateFields.length === 0) {
-        ctx.response.status = 400;
-        ctx.response.body = { message: "Keine Felder zum Aktualisieren gefunden." };
-        return;
-    }
-
-    try {
-        const updateQuery = `UPDATE goals SET ${updateFields.join(', ')} WHERE goal_id = ? AND user_id = ?`;
-        queryParams.push(id, userId);
-        
-        const [result] = await db.execute(updateQuery, queryParams);
-
-        if (result.affectedRows === 0) {
-            ctx.response.status = 404;
-            ctx.response.body = { message: "Sparziel nicht gefunden oder Zugriff verweigert." };
-            return;
-        }
-
-        ctx.response.status = 200;
-        ctx.response.body = { message: "Sparziel erfolgreich aktualisiert." };
-
-    } catch (error) {
-        console.error("Datenbankfehler beim Aktualisieren des Ziels:", error);
-        ctx.response.status = 500;
-        ctx.response.body = { message: "Interner Serverfehler beim Aktualisieren." };
-    }
-});
-
 // PUT /api/transactions/goal/:id/add - Betrag zum Sparziel hinzufügen
 router.put('/api/transactions/goal/:id/add', authenticateUser, async (ctx) => {
     const id = ctx.params.id;
@@ -523,6 +398,131 @@ router.put('/api/transactions/goal/:id/remove', authenticateUser, async (ctx) =>
         console.error("Datenbankfehler beim Entfernen des Betrags:", error);
         ctx.response.status = 500;
         ctx.response.body = { message: "Interner Serverfehler beim Entfernen des Betrags." };
+    }
+});
+
+// GET /api/transactions/goal/:id
+router.get('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
+    const id = ctx.params.id;
+    const userId = ctx.state.user.id;
+
+    try {
+        const [goalResult] = await db.execute(
+            `SELECT * FROM goals WHERE goal_id = ? AND user_id = ?`,
+            [id, userId]
+        );
+
+        if (goalResult.length === 0) {
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Sparziel nicht gefunden oder Zugriff verweigert." };
+            return;
+        }
+
+        const goal = goalResult[0];
+        const target = parseFloat(goal.target_amount);
+        const saved = parseFloat(goal.current_savings);
+        const endDate = new Date(goal.end_date);
+        const today = new Date();
+
+        const progressPercent = ((saved / target) * 100).toFixed(2);
+        
+        let monthsRemaining = (endDate.getFullYear() - today.getFullYear()) * 12;
+        monthsRemaining -= today.getMonth();
+        monthsRemaining += endDate.getMonth();
+        monthsRemaining = Math.max(1, monthsRemaining);
+
+        const neededToSave = Math.max(0, target - saved);
+        const amountToSavePerMonth = neededToSave / monthsRemaining;
+
+        let badge = null;
+        if (parseFloat(progressPercent) >= 50 && parseFloat(progressPercent) < 100) {
+            badge = "50%-Meilenstein erreicht!";
+        } else if (parseFloat(progressPercent) >= 100) {
+            badge = "Ziel erreicht!";
+        }
+
+        ctx.response.status = 200;
+        ctx.response.body = {
+            goal: goal,
+            progress: {
+                percent: progressPercent,
+                badge: badge
+            },
+            reminder: {
+                amount: amountToSavePerMonth.toFixed(2),
+                months: monthsRemaining
+            }
+        };
+
+    } catch (error) {
+        console.error("Datenbankfehler beim Abrufen des Ziels:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler." };
+    }
+});
+
+// PUT /api/transactions/goal/:id
+router.put('/api/transactions/goal/:id', authenticateUser, async (ctx) => {
+    const id = ctx.params.id;
+    const userId = ctx.state.user.id;
+    const body = ctx.state.body || {};
+    const { name, current_savings, target_amount } = body;
+
+    const parsedSavings = parseFloat(current_savings);
+    const parsedTarget = parseFloat(target_amount);
+    
+    if (!name && isNaN(parsedSavings) && isNaN(parsedTarget)) {
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Keine gültigen Felder für das Update bereitgestellt." };
+        return;
+    }
+    if ((!isNaN(parsedSavings) && parsedSavings < 0) || (!isNaN(parsedTarget) && parsedTarget <= 0)) {
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Sparbeträge und Zielbeträge müssen positiv sein." };
+        return;
+    }
+
+    let updateFields = [];
+    let queryParams = [];
+
+    if (name) {
+        updateFields.push('name = ?');
+        queryParams.push(name);
+    }
+    if (!isNaN(parsedSavings)) {
+        updateFields.push('current_savings = ?');
+        queryParams.push(parsedSavings);
+    }
+    if (!isNaN(parsedTarget)) {
+        updateFields.push('target_amount = ?');
+        queryParams.push(parsedTarget);
+    }
+
+    if (updateFields.length === 0) {
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Keine Felder zum Aktualisieren gefunden." };
+        return;
+    }
+
+    try {
+        const updateQuery = `UPDATE goals SET ${updateFields.join(', ')} WHERE goal_id = ? AND user_id = ?`;
+        queryParams.push(id, userId);
+        
+        const [result] = await db.execute(updateQuery, queryParams);
+
+        if (result.affectedRows === 0) {
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Sparziel nicht gefunden oder Zugriff verweigert." };
+            return;
+        }
+
+        ctx.response.status = 200;
+        ctx.response.body = { message: "Sparziel erfolgreich aktualisiert." };
+
+    } catch (error) {
+        console.error("Datenbankfehler beim Aktualisieren des Ziels:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Interner Serverfehler beim Aktualisieren." };
     }
 });
 
