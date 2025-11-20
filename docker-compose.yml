@@ -1,6 +1,6 @@
 services:
 
-  # Backend-Service (Deno + Oak)
+  
   backend:
     build:
       context: .
@@ -29,7 +29,6 @@ services:
       MYSQL_DATABASE: budget_tracker_db
       MYSQL_USER: sparo_user
       MYSQL_PASSWORD: app_password123
-    # Port für lokale Entwicklung exponiert (damit Backend vom Host aus zugreifen kann)
     ports:
       - "3306:3306"
     volumes:
