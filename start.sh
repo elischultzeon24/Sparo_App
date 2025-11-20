@@ -12,6 +12,15 @@ echo -e "${BLUE}🚀 Starte Sparo-Anwendung...${NC}\n"
 # Prüfe ob Docker verwendet werden soll
 USE_DOCKER=${1:-"local"}
 
+# Prüfe ob Docker läuft (für Docker-Modus)
+if [ "$USE_DOCKER" = "docker" ] || [ "$USE_DOCKER" = "local" ]; then
+    if ! docker info > /dev/null 2>&1; then
+        echo -e "${RED}❌ Docker läuft nicht!${NC}"
+        echo -e "${YELLOW}Bitte starte Docker Desktop und versuche es erneut.${NC}\n"
+        exit 1
+    fi
+fi
+
 if [ "$USE_DOCKER" = "docker" ]; then
     echo -e "${YELLOW}🐳 Starte mit Docker...${NC}"
     docker-compose -f docker-compose.yml up -d
@@ -23,19 +32,18 @@ if [ "$USE_DOCKER" = "docker" ]; then
     exit 0
 fi
 
-# Lokaler Modus (ohne Docker für Backend)
-# 1. Docker Compose starten (nur Datenbank)
+
 echo -e "${YELLOW}1. Starte Datenbank (Docker)...${NC}"
 docker-compose -f docker-compose.dev.yml up -d budget-db
 
-# Warte bis Datenbank bereit ist
+
 echo -e "${YELLOW}   Warte auf Datenbank...${NC}"
 sleep 5
 
-# 2. Backend starten
+
 echo -e "${YELLOW}2. Starte Backend-Server (lokal)...${NC}"
 
-# Setze Umgebungsvariablen für Backend
+
 export DB_HOST=localhost
 export DB_PORT=3306
 export DB_DATABASE=budget_tracker_db
@@ -46,12 +54,12 @@ export FRONTEND_URL=http://localhost:5173
 export JWT_SECRET=your_super_secret_jwt_key_that_is_very_long_and_random_12345
 
 cd backend
-# Starte Backend im Hintergrund, aber leite Ausgabe weiter
+
 deno task dev > ../backend.log 2>&1 &
 BACKEND_PID=$!
 cd ..
 
-# Prüfe ob Backend erfolgreich gestartet wurde
+
 sleep 3
 if ! kill -0 $BACKEND_PID 2>/dev/null; then
     echo -e "${RED}❌ Backend konnte nicht gestartet werden!${NC}"
@@ -60,10 +68,10 @@ if ! kill -0 $BACKEND_PID 2>/dev/null; then
     exit 1
 fi
 
-# Warte kurz
+
 sleep 2
 
-# 3. Frontend starten
+
 echo -e "${YELLOW}3. Starte Frontend...${NC}"
 cd frontend
 npm run dev &
@@ -77,7 +85,7 @@ echo -e "${GREEN}🗄️  Datenbank: localhost:3306${NC}\n"
 echo -e "${YELLOW}Zum Beenden: Drücke Ctrl+C${NC}\n"
 echo -e "${YELLOW}Backend-Logs werden in backend.log geschrieben${NC}\n"
 
-# Cleanup-Funktion beim Beenden
+
 cleanup() {
     echo -e "\n${YELLOW}🛑 Beende Services...${NC}"
     if [ ! -z "$BACKEND_PID" ]; then
@@ -90,9 +98,9 @@ cleanup() {
     exit 0
 }
 
-# Trap für Ctrl+C
+
 trap cleanup SIGINT SIGTERM
 
-# Warte auf Prozesse
+
 wait
 
