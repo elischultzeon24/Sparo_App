@@ -163,7 +163,6 @@ onMounted(() => {
             <div class="goals-section">
                 <div class="goals-header">
                     <h2>Meine Sparziele</h2>
-                    <router-link to="/goals" class="goals-link">Alle Sparziele anzeigen →</router-link>
                 </div>
                 
                 <div v-if="goalsLoading" class="loading-state card">
