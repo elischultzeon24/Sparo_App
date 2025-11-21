@@ -2,11 +2,38 @@
 
 ## Voraussetzungen
 
-- Docker und Docker Compose installiert
-- Node.js und npm installiert (für Frontend)
-- Deno installiert (für Backend im lokalen Modus)
+- **Docker Desktop** installiert und gestartet (muss vor dem Start laufen!)
+- **Docker Compose** installiert (meist mit Docker Desktop enthalten)
+- **Node.js** und **npm** installiert (für Frontend)
+- **Deno** installiert (für Backend im lokalen Modus)
 
 **Windows-Benutzer:** PowerShell 5.1 oder höher (standardmäßig auf Windows 10/11)
+
+**Wichtig:** Docker Desktop muss vor dem Start der Anwendung gestartet sein! Prüfen Sie, ob Docker läuft mit:
+```bash
+docker info
+```
+
+## Projekt herunterladen
+
+Bevor Sie die Anwendung starten können, müssen Sie das Projekt zuerst herunterladen:
+
+### Option 1: Git Repository klonen
+```bash
+git clone <repository-url>
+cd Sparo
+```
+
+### Option 2: ZIP-Datei entpacken
+```bash
+# Linux/macOS
+unzip Sparo.zip
+cd Sparo
+
+# Windows (PowerShell)
+Expand-Archive -Path Sparo.zip -DestinationPath .
+cd Sparo
+```
 
 ## Start der Anwendung
 
