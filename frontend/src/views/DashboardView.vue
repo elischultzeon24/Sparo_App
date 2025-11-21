@@ -16,6 +16,8 @@ const summaryData = ref({
     totalExpense: 0,
     categoryBreakdown: []
 });
+const goals = ref([]);
+const goalsLoading = ref(false);
 const errorMessage = ref('');
 const isLoading = ref(true);
 
@@ -87,8 +89,32 @@ const chartData = computed(() => {
     };
 });
 
+const fetchGoals = async () => {
+    goalsLoading.value = true;
+    try {
+        const response = await axios.get('http://localhost:3000/api/transactions/goals', {
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`
+            }
+        });
+        goals.value = response.data.goals || [];
+    } catch (error) {
+        console.error("Fehler beim Laden der Sparziele:", error);
+        goals.value = [];
+    } finally {
+        goalsLoading.value = false;
+    }
+};
+
+const getGoalProgress = (goal) => {
+    const saved = parseFloat(goal.current_savings) || 0;
+    const target = parseFloat(goal.target_amount) || 1;
+    return Math.min((saved / target) * 100, 100).toFixed(1);
+};
+
 onMounted(() => {
     fetchSummary();
+    fetchGoals();
 });
 </script>
 
@@ -131,6 +157,44 @@ onMounted(() => {
                         <CategoryChart :chartData="chartData" />
                     </div>
                     <p v-else class="no-data-message">Noch keine Ausgaben erfasst, um Diagramme zu erstellen.</p>
+                </div>
+            </div>
+
+            <div class="goals-section">
+                <div class="goals-header">
+                    <h2>Meine Sparziele</h2>
+                    <router-link to="/goals" class="goals-link">Alle Sparziele anzeigen →</router-link>
+                </div>
+                
+                <div v-if="goalsLoading" class="loading-state card">
+                    <p>Sparziele werden geladen...</p>
+                </div>
+                <div v-else-if="goals.length === 0" class="no-goals card">
+                    <p>Noch keine Sparziele angelegt.</p>
+                    <router-link to="/goals" class="create-goal-button">Sparziel erstellen</router-link>
+                </div>
+                <div v-else class="goals-grid">
+                    <div v-for="goal in goals.slice(0, 3)" :key="goal.goal_id" class="goal-card">
+                        <div class="goal-header">
+                            <h3>{{ goal.name }}</h3>
+                            <router-link :to="`/goals/${goal.goal_id}`" class="goal-link">Details →</router-link>
+                        </div>
+                        <div class="goal-progress">
+                            <div class="goal-amounts">
+                                <span class="saved">{{ parseFloat(goal.current_savings || 0).toFixed(2) }} €</span>
+                                <span class="separator">von</span>
+                                <span class="target">{{ parseFloat(goal.target_amount || 0).toFixed(2) }} €</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div 
+                                    class="progress-bar" 
+                                    :style="{ width: getGoalProgress(goal) + '%' }"
+                                >
+                                    <span class="progress-text">{{ getGoalProgress(goal) }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -341,6 +405,160 @@ onMounted(() => {
     text-align: center;
 }
 
+.goals-section {
+    margin-top: 40px;
+}
+
+.goals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.goals-header h2 {
+    margin: 0;
+}
+
+.goals-link {
+    color: #1a1a1a;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.goals-link:hover {
+    color: #333333;
+    text-decoration: underline;
+}
+
+.goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.goal-card {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e5e5;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.goal-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.goal-header h3 {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.goal-link {
+    color: #1a1a1a;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.goal-link:hover {
+    color: #333333;
+    text-decoration: underline;
+}
+
+.goal-progress {
+    margin-top: 15px;
+}
+
+.goal-amounts {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.goal-amounts .saved {
+    color: #1a1a1a;
+}
+
+.goal-amounts .separator {
+    color: #666666;
+    font-weight: 400;
+}
+
+.goal-amounts .target {
+    color: #1a1a1a;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 24px;
+    background: #e5e5e5;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #1a1a1a;
+    border-radius: 6px;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-text {
+    color: white;
+    font-weight: 600;
+    font-size: 0.85em;
+    z-index: 1;
+}
+
+.no-goals {
+    text-align: center;
+    padding: 40px;
+}
+
+.no-goals p {
+    color: #666666;
+    margin-bottom: 20px;
+}
+
+.create-goal-button {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #1a1a1a;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.create-goal-button:hover {
+    background: #333333;
+}
+
 /* Responsive Design */
 @media (max-width: 968px) {
     .dashboard-grid {
@@ -378,6 +596,16 @@ onMounted(() => {
     .add-transaction-button {
         width: 100%;
         text-align: center;
+    }
+    
+    .goals-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .goals-grid {
+        grid-template-columns: 1fr;
     }
 }
 </style>

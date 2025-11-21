@@ -30,7 +30,11 @@ const goalId = computed(() => route.params.id);
 
 const fetchGoals = async () => {
     try {
-        const response = await axios.get('http://localhost:3000/api/transactions/goals');
+        const response = await axios.get('http://localhost:3000/api/transactions/goals', {
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`
+            }
+        });
         goalsList.value = response.data.goals || [];
         
         if (goalId.value) {
@@ -55,7 +59,11 @@ const fetchGoal = async (id) => {
     const apiUrl = `http://localhost:3000/api/transactions/goal/${id}`;
 
     try {
-        const response = await axios.get(apiUrl);
+        const response = await axios.get(apiUrl, {
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`
+            }
+        });
         goalDetails.value = response.data;
         errorMessage.value = '';
         successMessage.value = '';
@@ -161,6 +169,10 @@ const createGoal = async () => {
             target_amount: parseFloat(goalForm.value.target_amount),
             start_date: goalForm.value.start_date,
             end_date: goalForm.value.end_date
+        }, {
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`
+            }
         });
 
         if (response.data.goalId) {
