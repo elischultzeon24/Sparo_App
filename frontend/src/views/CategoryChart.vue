@@ -12,15 +12,28 @@ const props = defineProps({
     }
 });
 
-const chartOptions = computed(() => ({
-    labels: props.chartData.labels,
-    datasets: [
-        {
-            data: props.chartData.data,
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
-        }
-    ]
-}));
+// Erweiterte Farbpalette für mehr Kategorien
+const getColors = (count) => {
+    const baseColors = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
+        '#C9CBCF', '#FF6384', '#4BC0C0', '#FF6384', '#36A2EB', '#FFCE56',
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+    ];
+    return baseColors.slice(0, count);
+};
+
+const chartOptions = computed(() => {
+    const dataCount = props.chartData.data?.length || 0;
+    return {
+        labels: props.chartData.labels || [],
+        datasets: [
+            {
+                data: props.chartData.data || [],
+                backgroundColor: getColors(dataCount),
+            }
+        ]
+    };
+});
 
 const options = ref({
     responsive: true,

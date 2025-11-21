@@ -73,9 +73,17 @@ const fetchSummary = async () => {
 
 
 const chartData = computed(() => {
+    // Filtere nur Kategorien mit Beträgen > 0 und konvertiere negative Beträge zu positiven
+    const filteredData = summaryData.value.categoryBreakdown
+        .filter(item => item.category_total && Math.abs(parseFloat(item.category_total)) > 0)
+        .map(item => ({
+            category: item.category,
+            total: Math.abs(parseFloat(item.category_total))
+        }));
+    
     return {
-        labels: summaryData.value.categoryBreakdown.map(item => item.category),
-        data: summaryData.value.categoryBreakdown.map(item => item.category_total)
+        labels: filteredData.map(item => item.category),
+        data: filteredData.map(item => item.total)
     };
 });
 

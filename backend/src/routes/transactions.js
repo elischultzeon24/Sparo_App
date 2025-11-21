@@ -30,10 +30,12 @@ router.get('/api/transactions/summary', authenticateUser, async (ctx) => {
         const [categoryBreakdown] = await db.execute(
             `SELECT 
                 category, 
-                SUM(amount) AS category_total
+                ABS(SUM(amount)) AS category_total
             FROM transactions
             WHERE user_id = ? AND type = 'Expense' AND MONTH(date) = ? AND YEAR(date) = ?
-            GROUP BY category;`,
+            GROUP BY category
+            HAVING category_total > 0
+            ORDER BY category_total DESC;`,
             [userId, parseInt(month), parseInt(year)]
         );
 

@@ -1,0 +1,34 @@
+[0m[32mTask[0m [0m[36mdev[0m deno run --allow-net --allow-read --allow-env --allow-run --allow-scripts --watch server.js
+[0m[38;5;12mWatcher[0m Process started.
+oak send() does not work under Node.js.
+[0m[1m[31merror[0m: Uncaught AddrInUse: Address already in use (os error 48)
+    at [0m[1m[3mlisten[0m ([0m[36mext:deno_net/01_net.js[0m:[0m[33m594[0m:[0m[33m35[0m)
+    at [0m[1m[3mserveInner[0m ([0m[36mext:deno_http/00_serve.ts[0m:[0m[33m713[0m:[0m[33m16[0m)
+    at [0m[1m[3mserve[0m ([0m[36mext:deno_http/00_serve.ts[0m:[0m[33m629[0m:[0m[33m10[0m)
+    at [0m[1m[3mServerImpl._serve[0m ([0m[36mnode:http[0m:[0m[33m1638[0m:[0m[33m22[0m)
+    at [0m[36mnode:http[0m:[0m[33m1582[0m:[0m[33m23[0m
+    at [0m[1m[3mArray.processTicksAndRejections[0m ([0m[36mext:deno_node/_next_tick.ts[0m:[0m[33m31[0m:[0m[33m11[0m)
+    at [0m[1m[3meventLoopTick[0m ([0m[36mext:core/01_core.js[0m:[0m[33m176[0m:[0m[33m29[0m)
+[0m[38;5;12mWatcher[0m Process failed. Restarting on file change...
+[0m[38;5;12mWatcher[0m [0m[38;5;245mRestarting! File change detected: "/Users/eliasschultze/Sparo/backend/src/routes/transactions.js"[0m
+oak send() does not work under Node.js.
+[0m[1m[31merror[0m: Uncaught AddrInUse: Address already in use (os error 48)
+    at [0m[1m[3mlisten[0m ([0m[36mext:deno_net/01_net.js[0m:[0m[33m594[0m:[0m[33m35[0m)
+    at [0m[1m[3mserveInner[0m ([0m[36mext:deno_http/00_serve.ts[0m:[0m[33m713[0m:[0m[33m16[0m)
+    at [0m[1m[3mserve[0m ([0m[36mext:deno_http/00_serve.ts[0m:[0m[33m629[0m:[0m[33m10[0m)
+    at [0m[1m[3mServerImpl._serve[0m ([0m[36mnode:http[0m:[0m[33m1638[0m:[0m[33m22[0m)
+    at [0m[36mnode:http[0m:[0m[33m1582[0m:[0m[33m23[0m
+    at [0m[1m[3mArray.processTicksAndRejections[0m ([0m[36mext:deno_node/_next_tick.ts[0m:[0m[33m31[0m:[0m[33m11[0m)
+    at [0m[1m[3meventLoopTick[0m ([0m[36mext:core/01_core.js[0m:[0m[33m176[0m:[0m[33m29[0m)
+[0m[38;5;12mWatcher[0m Process failed. Restarting on file change...
+[0m[38;5;12mWatcher[0m [0m[38;5;245mRestarting! File change detected: "/Users/eliasschultze/Sparo/backend/src/routes/transactions.js"[0m
+oak send() does not work under Node.js.
+[0m[1m[31merror[0m: Uncaught AddrInUse: Address already in use (os error 48)
+    at [0m[1m[3mlisten[0m ([0m[36mext:deno_net/01_net.js[0m:[0m[33m594[0m:[0m[33m35[0m)
+    at [0m[1m[3mserveInner[0m ([0m[36mext:deno_http/00_serve.ts[0m:[0m[33m713[0m:[0m[33m16[0m)
+    at [0m[1m[3mserve[0m ([0m[36mext:deno_http/00_serve.ts[0m:[0m[33m629[0m:[0m[33m10[0m)
+    at [0m[1m[3mServerImpl._serve[0m ([0m[36mnode:http[0m:[0m[33m1638[0m:[0m[33m22[0m)
+    at [0m[36mnode:http[0m:[0m[33m1582[0m:[0m[33m23[0m
+    at [0m[1m[3mArray.processTicksAndRejections[0m ([0m[36mext:deno_node/_next_tick.ts[0m:[0m[33m31[0m:[0m[33m11[0m)
+    at [0m[1m[3meventLoopTick[0m ([0m[36mext:core/01_core.js[0m:[0m[33m176[0m:[0m[33m29[0m)
+[0m[38;5;12mWatcher[0m Process failed. Restarting on file change...
