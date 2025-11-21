@@ -25,6 +25,8 @@ const goalForm = ref({
 const amountToAdd = ref('');
 const amountToRemove = ref('');
 const isUpdating = ref(false);
+const showDeleteConfirm = ref(false);
+const isDeleting = ref(false);
 
 const goalId = computed(() => route.params.id);
 
@@ -192,6 +194,39 @@ const getBadgeClass = (badgeName) => {
     if (badgeName) return 'badge-achieved';
     return '';
 }
+
+const deleteGoal = async () => {
+    if (!goalId.value) return;
+    
+    isDeleting.value = true;
+    errorMessage.value = '';
+    successMessage.value = '';
+
+    try {
+        const response = await axios.delete(
+            `http://localhost:3000/api/transactions/goal/${goalId.value}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${authStore.token}`
+                }
+            }
+        );
+
+        successMessage.value = response.data.message;
+        showDeleteConfirm.value = false;
+        
+        // Warte kurz, dann lade die Ziele neu
+        setTimeout(async () => {
+            await fetchGoals();
+        }, 1000);
+    } catch (error) {
+        console.error("Fehler beim Löschen des Sparziels:", error);
+        errorMessage.value = error.response?.data?.message || 'Fehler beim Löschen des Sparziels.';
+        showDeleteConfirm.value = false;
+    } finally {
+        isDeleting.value = false;
+    }
+};
 
 onMounted(() => {
     fetchGoals();
@@ -362,9 +397,31 @@ onMounted(() => {
                 </div>
             </div>
             
-            <button @click="showCreateForm = true" class="create-new-button">
-                Neues Sparziel erstellen
-            </button>
+            <div class="goal-actions">
+                <button @click="showCreateForm = true" class="create-new-button">
+                    Neues Sparziel erstellen
+                </button>
+                <button @click="showDeleteConfirm = true" class="delete-button">
+                    Sparziel löschen
+                </button>
+            </div>
+            
+            <!-- Bestätigungsdialog für Löschen -->
+            <div v-if="showDeleteConfirm" class="delete-confirm-overlay" @click.self="showDeleteConfirm = false">
+                <div class="delete-confirm-dialog">
+                    <h3>Sparziel löschen?</h3>
+                    <p>Möchtest du das Sparziel "{{ goalDetails?.goal?.name }}" wirklich löschen?</p>
+                    <p class="warning-text">Diese Aktion kann nicht rückgängig gemacht werden.</p>
+                    <div class="confirm-buttons">
+                        <button @click="deleteGoal" :disabled="isDeleting" class="confirm-delete-button">
+                            {{ isDeleting ? 'Lösche...' : 'Ja, löschen' }}
+                        </button>
+                        <button @click="showDeleteConfirm = false" :disabled="isDeleting" class="cancel-button">
+                            Abbrechen
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div v-else class="error-card card">
@@ -583,10 +640,16 @@ onMounted(() => {
     cursor: not-allowed;
 }
 
+.goal-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
 .create-new-button {
-    width: 100%;
-    max-width: 600px;
-    margin: 30px auto 0;
+    flex: 1;
+    min-width: 200px;
     padding: 14px;
     background: #1a1a1a;
     color: white;
@@ -596,11 +659,118 @@ onMounted(() => {
     font-size: 16px;
     font-weight: 500;
     transition: background 0.2s ease;
-    display: block;
 }
 
 .create-new-button:hover {
     background: #333333;
+}
+
+.delete-button {
+    flex: 1;
+    min-width: 200px;
+    padding: 14px;
+    background: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.delete-button:hover {
+    background: #b71c1c;
+}
+
+.delete-confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.delete-confirm-dialog {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.delete-confirm-dialog h3 {
+    margin: 0 0 15px 0;
+    color: #1a1a1a;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.delete-confirm-dialog p {
+    margin: 10px 0;
+    color: #4a4a4a;
+    line-height: 1.5;
+}
+
+.warning-text {
+    color: #d32f2f;
+    font-weight: 500;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.confirm-delete-button {
+    flex: 1;
+    padding: 12px;
+    background: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.confirm-delete-button:hover:not(:disabled) {
+    background: #b71c1c;
+}
+
+.confirm-delete-button:disabled {
+    background: #d1d1d1;
+    cursor: not-allowed;
+}
+
+.cancel-button {
+    flex: 1;
+    padding: 12px;
+    background: #e5e5e5;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.cancel-button:hover:not(:disabled) {
+    background: #d1d1d1;
+}
+
+.cancel-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .error-message {
@@ -730,6 +900,24 @@ onMounted(() => {
     }
     
     .amount-button {
+        width: 100%;
+    }
+    
+    .goal-actions {
+        flex-direction: column;
+    }
+    
+    .create-new-button,
+    .delete-button {
+        width: 100%;
+    }
+    
+    .confirm-buttons {
+        flex-direction: column;
+    }
+    
+    .confirm-delete-button,
+    .cancel-button {
         width: 100%;
     }
 }
