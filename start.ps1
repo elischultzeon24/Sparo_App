@@ -1,28 +1,22 @@
-# PowerShell-Skript zum Starten der Sparo-Anwendung
+# PowerShell Script zum Starten der Sparo-Anwendung
 
-# Farben für bessere Ausgabe
 function Write-ColorOutput {
     param(
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$ForegroundColor,
-        [Parameter(Mandatory=$true, Position=1)]
-        [string]$Message
+        [string]$Color,
+        [string]$Text
     )
-    $fc = $host.UI.RawUI.ForegroundColor
-    $colorMap = @{
-        'Cyan' = 'Cyan'
-        'Green' = 'Green'
-        'Yellow' = 'Yellow'
-        'Red' = 'Red'
+    $originalColor = $host.UI.RawUI.ForegroundColor
+    switch ($Color) {
+        "Cyan" { $host.UI.RawUI.ForegroundColor = "Cyan" }
+        "Green" { $host.UI.RawUI.ForegroundColor = "Green" }
+        "Yellow" { $host.UI.RawUI.ForegroundColor = "Yellow" }
+        "Red" { $host.UI.RawUI.ForegroundColor = "Red" }
     }
-    if ($colorMap.ContainsKey($ForegroundColor)) {
-        $host.UI.RawUI.ForegroundColor = $colorMap[$ForegroundColor]
-    }
-    Write-Output $Message
-    $host.UI.RawUI.ForegroundColor = $fc
+    Write-Output $Text
+    $host.UI.RawUI.ForegroundColor = $originalColor
 }
 
-Write-ColorOutput Cyan "Starte Sparo-Anwendung...`n"
+Write-ColorOutput -Color Cyan -Text "Starte Sparo-Anwendung..."
 
 $USE_DOCKER = if ($args[0]) { $args[0] } else { "local" }
 
@@ -30,30 +24,31 @@ if ($USE_DOCKER -eq "docker" -or $USE_DOCKER -eq "local") {
     try {
         docker info | Out-Null
     } catch {
-        Write-ColorOutput Red "FEHLER: Docker laeuft nicht!"
-        Write-ColorOutput Yellow "Bitte starte Docker Desktop und versuche es erneut.`n"
+        Write-ColorOutput -Color Red -Text "FEHLER: Docker laeuft nicht!"
+        Write-ColorOutput -Color Yellow -Text "Bitte starte Docker Desktop und versuche es erneut."
         exit 1
     }
 }
 
 if ($USE_DOCKER -eq "docker") {
-    Write-ColorOutput Yellow "Starte mit Docker..."
+    Write-ColorOutput -Color Yellow -Text "Starte mit Docker..."
     docker-compose -f docker-compose.yml up -d
-    Write-ColorOutput Green "`nDocker-Services gestartet!`n"
-    Write-ColorOutput Green "Backend:  http://localhost:3000"
-    Write-ColorOutput Green "Datenbank: localhost:3306`n"
-    Write-ColorOutput Yellow "Frontend muss separat gestartet werden:"
-    Write-ColorOutput Yellow "  cd frontend && npm run dev`n"
+    Write-ColorOutput -Color Green -Text ""
+    Write-ColorOutput -Color Green -Text "Docker-Services gestartet!"
+    Write-ColorOutput -Color Green -Text "Backend:  http://localhost:3000"
+    Write-ColorOutput -Color Green -Text "Datenbank: localhost:3306"
+    Write-ColorOutput -Color Yellow -Text "Frontend muss separat gestartet werden:"
+    Write-ColorOutput -Color Yellow -Text "  cd frontend && npm run dev"
     exit 0
 }
 
-Write-ColorOutput Yellow "1. Starte Datenbank (Docker)..."
+Write-ColorOutput -Color Yellow -Text "1. Starte Datenbank (Docker)..."
 docker-compose -f docker-compose.dev.yml up -d budget-db
 
-Write-ColorOutput Yellow "   Warte auf Datenbank..."
+Write-ColorOutput -Color Yellow -Text "   Warte auf Datenbank..."
 Start-Sleep -Seconds 5
 
-Write-ColorOutput Yellow "2. Starte Backend-Server (lokal)..."
+Write-ColorOutput -Color Yellow -Text "2. Starte Backend-Server (lokal)..."
 
 $env:DB_HOST = "localhost"
 $env:DB_PORT = "3306"
@@ -70,8 +65,8 @@ Pop-Location
 
 Start-Sleep -Seconds 3
 if ($backendProcess.HasExited) {
-    Write-ColorOutput Red "FEHLER: Backend konnte nicht gestartet werden!"
-    Write-ColorOutput Yellow "Letzte Logs:"
+    Write-ColorOutput -Color Red -Text "FEHLER: Backend konnte nicht gestartet werden!"
+    Write-ColorOutput -Color Yellow -Text "Letzte Logs:"
     if (Test-Path "backend.log") {
         Get-Content "backend.log" -Tail 20
     }
@@ -80,27 +75,29 @@ if ($backendProcess.HasExited) {
 
 Start-Sleep -Seconds 2
 
-Write-ColorOutput Yellow "3. Starte Frontend..."
+Write-ColorOutput -Color Yellow -Text "3. Starte Frontend..."
 Push-Location frontend
 $frontendProcess = Start-Process -FilePath "npm" -ArgumentList "run", "dev" -PassThru -NoNewWindow
 Pop-Location
 
-Write-ColorOutput Green "`nAlles gestartet!`n"
-Write-ColorOutput Green "Frontend: http://localhost:5173"
-Write-ColorOutput Green "Backend:  http://localhost:3000"
-Write-ColorOutput Green "Datenbank: localhost:3306`n"
-Write-ColorOutput Yellow "Backend-Logs werden in backend.log geschrieben`n"
-Write-ColorOutput Yellow "Zum Beenden: Druecke Ctrl+C`n"
+Write-ColorOutput -Color Green -Text ""
+Write-ColorOutput -Color Green -Text "Alles gestartet!"
+Write-ColorOutput -Color Green -Text "Frontend: http://localhost:5173"
+Write-ColorOutput -Color Green -Text "Backend:  http://localhost:3000"
+Write-ColorOutput -Color Green -Text "Datenbank: localhost:3306"
+Write-ColorOutput -Color Yellow -Text "Backend-Logs werden in backend.log geschrieben"
+Write-ColorOutput -Color Yellow -Text "Zum Beenden: Druecke Ctrl+C"
 
 function Cleanup {
-    Write-ColorOutput Yellow "`nBeende Services..."
+    Write-ColorOutput -Color Yellow -Text ""
+    Write-ColorOutput -Color Yellow -Text "Beende Services..."
     if ($backendProcess -and !$backendProcess.HasExited) {
         Stop-Process -Id $backendProcess.Id -Force -ErrorAction SilentlyContinue
     }
     if ($frontendProcess -and !$frontendProcess.HasExited) {
         Stop-Process -Id $frontendProcess.Id -Force -ErrorAction SilentlyContinue
     }
-    Write-ColorOutput Green "Services beendet"
+    Write-ColorOutput -Color Green -Text "Services beendet"
     exit 0
 }
 
@@ -109,24 +106,22 @@ $null = Register-EngineEvent PowerShell.Exiting -Action { Cleanup }
 try {
     while ($true) {
         if ($backendProcess.HasExited) {
-            Write-ColorOutput Red "FEHLER: Backend-Prozess beendet unerwartet!"
+            Write-ColorOutput -Color Red -Text "FEHLER: Backend-Prozess beendet unerwartet!"
             if (Test-Path "backend.log") {
-                Write-ColorOutput Yellow "Letzte Logs:"
+                Write-ColorOutput -Color Yellow -Text "Letzte Logs:"
                 Get-Content "backend.log" -Tail 20
             }
             Cleanup
         }
-        
         if ($frontendProcess.HasExited) {
-            Write-ColorOutput Red "FEHLER: Frontend-Prozess beendet unerwartet!"
+            Write-ColorOutput -Color Red -Text "FEHLER: Frontend-Prozess beendet unerwartet!"
             Cleanup
         }
-        
         Start-Sleep -Seconds 1
     }
 } catch [System.Management.Automation.PipelineStoppedException] {
     Cleanup
 } catch {
-    Write-ColorOutput Red "Fehler: $_"
+    Write-ColorOutput -Color Red -Text "Fehler: $_"
     Cleanup
 }
