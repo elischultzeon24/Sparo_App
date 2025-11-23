@@ -159,6 +159,12 @@ onMounted(() => {
                     <p v-else class="no-data-message">Noch keine Ausgaben erfasst, um Diagramme zu erstellen.</p>
                 </div>
             </div>
+            
+            <div class="action-section">
+                <router-link to="/add" class="add-transaction-button">
+                    Einnahme / Ausgabe hinzufügen
+                </router-link>
+            </div>
 
             <div class="goals-section">
                 <div class="goals-header">
@@ -197,11 +203,7 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div class="action-section">
-                <router-link to="/add" class="add-transaction-button">
-                    Einnahme / Ausgabe hinzufügen
-                </router-link>
-            </div>
+            
 
         </div>
     </div>
